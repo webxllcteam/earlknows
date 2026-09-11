@@ -1,15 +1,18 @@
 import type { CollectionConfig } from 'payload'
 
 /**
- * A contractor asking to be listed. Doubles as the waitlist: if the territory
- * panel is already full, the application is still captured and marked waitlisted.
- * Waitlist volume is a demand curve for our own inventory.
+ * A contractor asking to be listed. Doubles as the waitlist: if the panel for
+ * that trade and metro is already at its cap, the application is still captured
+ * and marked waitlisted.
+ *
+ * Waitlist volume is a demand curve for our own inventory — lots of waitlisted
+ * roofers in the Treasure Valley means the cap or the price is too low.
  */
 export const Applications: CollectionConfig = {
   slug: 'applications',
   admin: {
     useAsTitle: 'businessName',
-    defaultColumns: ['businessName', 'service', 'city', 'status', 'createdAt'],
+    defaultColumns: ['businessName', 'service', 'market', 'status', 'createdAt'],
     description: 'Contractors who want in. Approve by creating a Provider from one.',
     group: 'Network',
   },
@@ -47,7 +50,7 @@ export const Applications: CollectionConfig = {
       type: 'row',
       fields: [
         { name: 'service', type: 'relationship', relationTo: 'services', admin: { width: '50%' } },
-        { name: 'city', type: 'relationship', relationTo: 'cities', admin: { width: '50%' } },
+        { name: 'market', type: 'relationship', relationTo: 'markets', admin: { width: '50%' } },
       ],
     },
     {

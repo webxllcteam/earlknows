@@ -522,7 +522,7 @@ export interface Application {
   email: string;
   website?: string | null;
   service?: (number | null) | Service;
-  city?: (number | null) | City;
+  market?: (number | null) | Market;
   licenseNumber?: string | null;
   yearsInBusiness?: number | null;
   /**
@@ -841,7 +841,7 @@ export interface ApplicationsSelect<T extends boolean = true> {
   email?: T;
   website?: T;
   service?: T;
-  city?: T;
+  market?: T;
   licenseNumber?: T;
   yearsInBusiness?: T;
   message?: T;
