@@ -71,6 +71,7 @@ export interface Config {
     cities: City;
     providers: Provider;
     territories: Territory;
+    applications: Application;
     leads: Lead;
     media: Media;
     users: User;
@@ -85,6 +86,7 @@ export interface Config {
     cities: CitiesSelect<false> | CitiesSelect<true>;
     providers: ProvidersSelect<false> | ProvidersSelect<true>;
     territories: TerritoriesSelect<false> | TerritoriesSelect<true>;
+    applications: ApplicationsSelect<false> | ApplicationsSelect<true>;
     leads: LeadsSelect<false> | LeadsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
@@ -299,18 +301,21 @@ export interface Territory {
    * Generated automatically.
    */
   label?: string | null;
-  status: 'open' | 'assigned' | 'paused';
+  status: 'live' | 'paused';
   service: number | Service;
   city: number | City;
   /**
-   * Exactly one. Leaving this empty publishes the page as unclaimed.
+   * The panel for this market. Shown in rotating order — never ranked, since the order is arbitrary.
    */
-  provider?: (number | null) | Provider;
+  providers?: (number | Provider)[] | null;
   /**
-   * USD per month.
+   * How many providers we currently accept here. Once the panel is full, applicants are waitlisted.
+   */
+  maxProviders: number;
+  /**
+   * Flat USD per slot, per month.
    */
   monthlyRate?: number | null;
-  startDate?: string | null;
   /**
    * Under ~60 characters. Falls back to a generated title.
    */
@@ -373,6 +378,35 @@ export interface Territory {
         id?: string | null;
       }[]
     | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Contractors who want in. Approve by creating a Provider from one.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "applications".
+ */
+export interface Application {
+  id: number;
+  status: 'new' | 'waitlisted' | 'vetting' | 'approved' | 'declined';
+  businessName: string;
+  contactName?: string | null;
+  phone: string;
+  email: string;
+  website?: string | null;
+  service?: (number | null) | Service;
+  city?: (number | null) | City;
+  licenseNumber?: string | null;
+  yearsInBusiness?: number | null;
+  /**
+   * Anything they told us.
+   */
+  message?: string | null;
+  /**
+   * Internal only.
+   */
+  notes?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -474,6 +508,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'territories';
         value: number | Territory;
+      } | null)
+    | ({
+        relationTo: 'applications';
+        value: number | Application;
       } | null)
     | ({
         relationTo: 'leads';
@@ -597,9 +635,9 @@ export interface TerritoriesSelect<T extends boolean = true> {
   status?: T;
   service?: T;
   city?: T;
-  provider?: T;
+  providers?: T;
+  maxProviders?: T;
   monthlyRate?: T;
-  startDate?: T;
   metaTitle?: T;
   metaDescription?: T;
   intro?: T;
@@ -613,6 +651,26 @@ export interface TerritoriesSelect<T extends boolean = true> {
         answer?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "applications_select".
+ */
+export interface ApplicationsSelect<T extends boolean = true> {
+  status?: T;
+  businessName?: T;
+  contactName?: T;
+  phone?: T;
+  email?: T;
+  website?: T;
+  service?: T;
+  city?: T;
+  licenseNumber?: T;
+  yearsInBusiness?: T;
+  message?: T;
+  notes?: T;
   updatedAt?: T;
   createdAt?: T;
 }

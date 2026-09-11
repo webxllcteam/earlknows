@@ -1,59 +1,71 @@
-import { headers as getHeaders } from 'next/headers.js'
-import Image from 'next/image'
-import { getPayload } from 'payload'
-import React from 'react'
-import { fileURLToPath } from 'url'
+import Link from 'next/link'
+import { payloadClient } from '@/lib/payload'
 
-import config from '@/payload.config'
-import './styles.css'
+export const revalidate = 3600
 
 export default async function HomePage() {
-  const headers = await getHeaders()
-  const payloadConfig = await config
-  const payload = await getPayload({ config: payloadConfig })
-  const { user } = await payload.auth({ headers })
+  const payload = await payloadClient()
 
-  const fileURL = `vscode://file/${fileURLToPath(import.meta.url)}`
+  const [services, cities] = await Promise.all([
+    payload.find({
+      collection: 'services',
+      where: { active: { equals: true } },
+      sort: 'sortOrder',
+      limit: 50,
+    }),
+    payload.find({
+      collection: 'cities',
+      where: { active: { equals: true } },
+      sort: 'name',
+      limit: 50,
+    }),
+  ])
 
   return (
-    <div className="home">
-      <div className="content">
-        <picture>
-          <source srcSet="https://raw.githubusercontent.com/payloadcms/payload/3.x/packages/ui/src/assets/payload-favicon.svg" />
-          <Image
-            alt="Payload Logo"
-            height={65}
-            src="https://raw.githubusercontent.com/payloadcms/payload/3.x/packages/ui/src/assets/payload-favicon.svg"
-            width={65}
-          />
-        </picture>
-        {!user && <h1>Welcome to your new project.</h1>}
-        {user && <h1>Welcome back, {user.email}</h1>}
-        <div className="links">
-          <a
-            className="admin"
-            href={payloadConfig.routes.admin}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            Go to admin panel
-          </a>
-          <a
-            className="docs"
-            href="https://payloadcms.com/docs"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            Documentation
-          </a>
-        </div>
-      </div>
-      <div className="footer">
-        <p>Update this page by editing</p>
-        <a className="codeLink" href={fileURL}>
-          <code>app/(frontend)/page.tsx</code>
-        </a>
-      </div>
+    <div className="wrap">
+      <section className="hero">
+        <h1>Earl knows a guy.</h1>
+        <p className="lede">
+          One vetted contractor per trade, per city. You get a name — not a form sold to eight
+          companies who all call you at dinner.
+        </p>
+      </section>
+
+      {services.docs.length > 0 && (
+        <section>
+          <h2>Trades</h2>
+          <ul className="grid">
+            {services.docs.map((service) => (
+              <li key={service.id}>
+                <Link className="card" href={`/${service.slug}`}>
+                  <span className="card-title">{service.name}</span>
+                  {service.shortDescription && (
+                    <span className="card-note">{service.shortDescription}</span>
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {cities.docs.length > 0 && (
+        <section>
+          <h2>Markets</h2>
+          <ul className="grid">
+            {cities.docs.map((city) => (
+              <li key={city.id}>
+                <Link className="card" href={`/${city.slug}`}>
+                  <span className="card-title">
+                    {city.name}, {city.state}
+                  </span>
+                  {city.county && <span className="card-note">{city.county}</span>}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   )
 }

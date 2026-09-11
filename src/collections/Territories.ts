@@ -44,10 +44,9 @@ export const Territories: CollectionConfig = {
       name: 'status',
       type: 'select',
       required: true,
-      defaultValue: 'open',
+      defaultValue: 'live',
       options: [
-        { label: 'Open — no provider yet', value: 'open' },
-        { label: 'Assigned', value: 'assigned' },
+        { label: 'Live', value: 'live' },
         { label: 'Paused', value: 'paused' },
       ],
       admin: { position: 'sidebar' },
@@ -72,20 +71,35 @@ export const Territories: CollectionConfig = {
       ],
     },
     {
-      name: 'provider',
+      name: 'providers',
       type: 'relationship',
       relationTo: 'providers',
-      admin: { description: 'Exactly one. Leaving this empty publishes the page as unclaimed.' },
+      hasMany: true,
+      admin: {
+        description:
+          'The panel for this market. Shown in rotating order — never ranked, since the order is arbitrary.',
+      },
     },
     {
       type: 'row',
       fields: [
         {
+          name: 'maxProviders',
+          type: 'number',
+          required: true,
+          defaultValue: 3,
+          min: 1,
+          admin: {
+            width: '50%',
+            description:
+              'How many providers we currently accept here. Once the panel is full, applicants are waitlisted.',
+          },
+        },
+        {
           name: 'monthlyRate',
           type: 'number',
-          admin: { width: '50%', description: 'USD per month.' },
+          admin: { width: '50%', description: 'Flat USD per slot, per month.' },
         },
-        { name: 'startDate', type: 'date', admin: { width: '50%' } },
       ],
     },
     {

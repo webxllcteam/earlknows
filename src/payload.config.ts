@@ -6,6 +6,7 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { buildConfig } from 'payload'
 import sharp from 'sharp'
 
+import { Applications } from './collections/Applications'
 import { Cities } from './collections/Cities'
 import { Leads } from './collections/Leads'
 import { Media } from './collections/Media'
@@ -23,7 +24,7 @@ export default buildConfig({
     importMap: { baseDir: path.resolve(dirname) },
     meta: { titleSuffix: '— Earl Knows' },
   },
-  collections: [Services, Cities, Providers, Territories, Leads, Media, Users],
+  collections: [Services, Cities, Providers, Territories, Applications, Leads, Media, Users],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
