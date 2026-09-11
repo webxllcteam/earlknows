@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, Where } from 'payload'
 
 /**
  * A Listing is one service in one market — the unit Earl sells.
@@ -88,7 +88,7 @@ export const Listings: CollectionConfig = {
         const marketId =
           typeof data?.market === 'object' ? data?.market?.id : (data?.market as number)
 
-        const and: Record<string, unknown>[] = [{ status: { equals: 'active' } }]
+        const and: Where[] = [{ status: { equals: 'active' } }]
         if (serviceId) and.push({ services: { contains: serviceId } })
         if (marketId) and.push({ serviceAreas: { contains: marketId } })
         return { and }
