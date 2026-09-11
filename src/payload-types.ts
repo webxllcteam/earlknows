@@ -138,7 +138,7 @@ export interface UserAuthOperations {
   };
 }
 /**
- * The trades Earl covers. Each one becomes a /[slug]/ hub page.
+ * Categories (Roofing) and their sub-services (Metal roofing). Contractors subscribe to a category; sub-services control which pages they show on.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "services".
@@ -179,6 +179,10 @@ export interface Service {
    * Lower numbers appear first.
    */
   sortOrder?: number | null;
+  /**
+   * Leave empty for a category (Roofing). Set it to make this a sub-service (Metal roofing). Billing happens at the category level.
+   */
+  parent?: (number | null) | Service;
   active?: boolean | null;
   updatedAt: string;
   createdAt: string;
@@ -292,9 +296,13 @@ export interface Provider {
   } | null;
   photos?: (number | Media)[] | null;
   /**
-   * Trades they work in.
+   * Categories they subscribe to. This is what they pay for.
    */
   services?: (number | Service)[] | null;
+  /**
+   * The specific work they do. A roofer who does not touch metal roofing will not appear on the metal roofing page.
+   */
+  subServices?: (number | Service)[] | null;
   /**
    * Metros they cover. One subscription per trade per metro — they never pick individual towns.
    */
@@ -711,6 +719,7 @@ export interface ServicesSelect<T extends boolean = true> {
   shortDescription?: T;
   intro?: T;
   sortOrder?: T;
+  parent?: T;
   active?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -770,6 +779,7 @@ export interface ProvidersSelect<T extends boolean = true> {
   bio?: T;
   photos?: T;
   services?: T;
+  subServices?: T;
   serviceAreas?: T;
   listedIn?: T;
   vettingNotes?: T;

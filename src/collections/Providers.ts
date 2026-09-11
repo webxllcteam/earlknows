@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, Where } from 'payload'
 
 export const Providers: CollectionConfig = {
   slug: 'providers',
@@ -94,7 +94,28 @@ export const Providers: CollectionConfig = {
           type: 'relationship',
           relationTo: 'services',
           hasMany: true,
-          admin: { description: 'Trades they work in.' },
+          admin: { description: 'Categories they subscribe to. This is what they pay for.' },
+        },
+        {
+          name: 'subServices',
+          type: 'relationship',
+          relationTo: 'services',
+          hasMany: true,
+          // Only sub-services, and only those under a category they subscribe to.
+          filterOptions: ({ data }): Where => {
+            const parents = Array.isArray(data?.services)
+              ? data.services.map((v: unknown) =>
+                  typeof v === 'object' && v ? (v as { id: number }).id : v,
+                )
+              : []
+            if (parents.length === 0) return { parent: { exists: true } }
+            const and: Where[] = [{ parent: { exists: true } }, { parent: { in: parents } }]
+            return { and }
+          },
+          admin: {
+            description:
+              'The specific work they do. A roofer who does not touch metal roofing will not appear on the metal roofing page.',
+          },
         },
         {
           name: 'serviceAreas',

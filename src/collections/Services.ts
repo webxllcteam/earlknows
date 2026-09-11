@@ -4,8 +4,8 @@ export const Services: CollectionConfig = {
   slug: 'services',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'slug', 'active'],
-    description: 'The trades Earl covers. Each one becomes a /[slug]/ hub page.',
+    defaultColumns: ['name', 'parent', 'slug', 'active'],
+    description: 'Categories (Roofing) and their sub-services (Metal roofing). Contractors subscribe to a category; sub-services control which pages they show on.',
     group: 'Catalog',
   },
   fields: [
@@ -33,6 +33,18 @@ export const Services: CollectionConfig = {
       type: 'number',
       defaultValue: 100,
       admin: { description: 'Lower numbers appear first.' },
+    },
+    {
+      name: 'parent',
+      type: 'relationship',
+      relationTo: 'services',
+      // Only top-level services can be parents — two levels, no deeper.
+      filterOptions: () => ({ parent: { exists: false } }),
+      admin: {
+        position: 'sidebar',
+        description:
+          'Leave empty for a category (Roofing). Set it to make this a sub-service (Metal roofing). Billing happens at the category level.',
+      },
     },
     { name: 'active', type: 'checkbox', defaultValue: true },
   ],

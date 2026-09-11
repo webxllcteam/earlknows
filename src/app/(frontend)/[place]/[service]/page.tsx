@@ -26,6 +26,7 @@ type ProviderDoc = {
   licenseNumber?: string | null
   bio?: unknown
   address?: Record<string, string> | null
+  subServices?: unknown
 }
 
 type Faq = { question: string; answer: string }
@@ -98,12 +99,28 @@ async function getPageData(placeSlug: string, serviceSlug: string) {
   const service = services.docs[0]
   if (!service) return null
 
+  // Billing sits on the category. A sub-service page inherits its parent's
+  // panel, then keeps only the providers who declared they do this work.
+  const parentId =
+    typeof service.parent === 'object' ? service.parent?.id : (service.parent as number | undefined)
+  const billingServiceId = parentId ?? service.id
+  const isSubService = Boolean(parentId)
+
+  const forThisService = (list: ProviderDoc[]) => {
+    if (!isSubService) return list
+    return list.filter((p) => {
+      const subs = (p as { subServices?: unknown }).subServices
+      if (!Array.isArray(subs)) return false
+      return subs.some((x) => (typeof x === 'object' && x ? (x as { id: number }).id : x) === service.id)
+    })
+  }
+
   if (place.kind === 'market') {
     const res = await payload.find({
       collection: 'listings',
       where: {
         and: [
-          { service: { equals: service.id } },
+          { service: { equals: billingServiceId } },
           { market: { equals: place.id } },
           { status: { equals: 'live' } },
         ],
@@ -117,7 +134,7 @@ async function getPageData(placeSlug: string, serviceSlug: string) {
     return {
       place,
       service,
-      providers: toProviders(listing.providers),
+      providers: forThisService(toProviders(listing.providers)),
       maxProviders: listing.maxProviders ?? 3,
       content: {
         metaTitle: listing.metaTitle,
@@ -152,7 +169,7 @@ async function getPageData(placeSlug: string, serviceSlug: string) {
       collection: 'listings',
       where: {
         and: [
-          { service: { equals: service.id } },
+          { service: { equals: billingServiceId } },
           { market: { equals: place.marketId } },
           { status: { equals: 'live' } },
         ],
@@ -170,7 +187,7 @@ async function getPageData(placeSlug: string, serviceSlug: string) {
   return {
     place,
     service,
-    providers: toProviders(listing?.providers),
+    providers: forThisService(toProviders(listing?.providers)),
     maxProviders: listing?.maxProviders ?? 3,
     content: {
       metaTitle: cityPage.metaTitle,
