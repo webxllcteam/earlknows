@@ -68,6 +68,7 @@ export interface Config {
   blocks: {};
   collections: {
     services: Service;
+    markets: Market;
     cities: City;
     providers: Provider;
     territories: Territory;
@@ -87,6 +88,7 @@ export interface Config {
   };
   collectionsSelect: {
     services: ServicesSelect<false> | ServicesSelect<true>;
+    markets: MarketsSelect<false> | MarketsSelect<true>;
     cities: CitiesSelect<false> | CitiesSelect<true>;
     providers: ProvidersSelect<false> | ProvidersSelect<true>;
     territories: TerritoriesSelect<false> | TerritoriesSelect<true>;
@@ -180,7 +182,32 @@ export interface Service {
   createdAt: string;
 }
 /**
- * Markets Earl operates in. Each becomes a /[city]/ hub page.
+ * Metro areas. Contractors buy a market, not a town.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "markets".
+ */
+export interface Market {
+  id: number;
+  /**
+   * e.g. Treasure Valley
+   */
+  name: string;
+  /**
+   * Internal only — markets have no page of their own.
+   */
+  slug: string;
+  state: string;
+  /**
+   * Internal: coverage boundaries, pricing rationale, anything useful.
+   */
+  notes?: string | null;
+  active?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Towns with their own page. Only create one you can write real local content for.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "cities".
@@ -203,9 +230,9 @@ export interface City {
   lat?: number | null;
   lng?: number | null;
   /**
-   * Neighbouring markets to cross-link. Helps authority circulate.
+   * Which metro this town belongs to. Territories are sold per market, so every city in a market shares the same panel.
    */
-  nearby?: (number | City)[] | null;
+  market: number | Market;
   active?: boolean | null;
   updatedAt: string;
   createdAt: string;
@@ -267,9 +294,9 @@ export interface Provider {
    */
   services?: (number | Service)[] | null;
   /**
-   * Markets they will travel to.
+   * Metro areas they cover.
    */
-  serviceAreas?: (number | City)[] | null;
+  serviceAreas?: (number | Market)[] | null;
   /**
    * Where Earl currently lists them. Read-only. If this is empty the contractor appears nowhere on the site — open the matching Territory and add them to its Providers panel.
    */
@@ -310,7 +337,7 @@ export interface Media {
   focalY?: number | null;
 }
 /**
- * One service × one city. Exclusivity is enforced here.
+ * One service × one market. This is the unit a contractor buys.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "territories".
@@ -323,7 +350,7 @@ export interface Territory {
   label?: string | null;
   status: 'live' | 'paused';
   service: number | Service;
-  city: number | City;
+  market: number | Market;
   /**
    * THIS is what publishes a contractor on the page. Only active providers who cover this trade and market appear here. Shown in rotating order — never ranked.
    */
@@ -518,6 +545,10 @@ export interface PayloadLockedDocument {
         value: number | Service;
       } | null)
     | ({
+        relationTo: 'markets';
+        value: number | Market;
+      } | null)
+    | ({
         relationTo: 'cities';
         value: number | City;
       } | null)
@@ -603,6 +634,19 @@ export interface ServicesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "markets_select".
+ */
+export interface MarketsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  state?: T;
+  notes?: T;
+  active?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "cities_select".
  */
 export interface CitiesSelect<T extends boolean = true> {
@@ -612,7 +656,7 @@ export interface CitiesSelect<T extends boolean = true> {
   county?: T;
   lat?: T;
   lng?: T;
-  nearby?: T;
+  market?: T;
   active?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -657,7 +701,7 @@ export interface TerritoriesSelect<T extends boolean = true> {
   label?: T;
   status?: T;
   service?: T;
-  city?: T;
+  market?: T;
   providers?: T;
   maxProviders?: T;
   monthlyRate?: T;

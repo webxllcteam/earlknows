@@ -46,6 +46,24 @@ The competitors we're positioned against:
   because it caps revenue per market arithmetically, gives every page a
   single point of supply failure, and can't load-balance lead volume.
 
+- **2026-09-11 — Territories are sold per *market*, not per city.** A market is a
+  metro (Treasure Valley); cities belong to it. A roofer sells "the valley", not
+  seven separate towns — so one territory covers the whole metro and every city
+  page in that market renders the same panel.
+  This deliberately separates two things Angi also keeps separate: the
+  **commercial unit** (what a contractor buys — Angi uses ZIP selections) and the
+  **page surface** (city pages, which exist for search). Creating a city page is
+  now an editorial decision, not a commercial one.
+  *Rule:* don't create a city page you can't write ~600 words of genuinely local
+  content for. "If you removed the city name, would anything unique remain?" is
+  the test. Seeded cities other than Boise are `active: false` until they earn a
+  page — inactive cities 404 rather than publishing thin duplicates.
+  *Schema note:* a Boise-based contractor shown on a Meridian page keeps their
+  real Boise address in `LocalBusiness`, with `areaServed` covering Meridian.
+  Never fabricate a local address.
+  *Later:* ZIP-level routing (Angi's approach) once there are enough providers
+  per market to make round-robin across a whole metro too blunt.
+
 - **2026-09-11 — Over-cap providers go on a waitlist.** They see "not accepting
   new providers here right now" and can leave details. This doubles as a demand
   curve for our own inventory: lots of waitlisted roofers in Boise means the cap

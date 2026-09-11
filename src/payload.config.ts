@@ -9,6 +9,7 @@ import sharp from 'sharp'
 import { Applications } from './collections/Applications'
 import { Cities } from './collections/Cities'
 import { Leads } from './collections/Leads'
+import { Markets } from './collections/Markets'
 import { Media } from './collections/Media'
 import { Providers } from './collections/Providers'
 import { Services } from './collections/Services'
@@ -24,7 +25,7 @@ export default buildConfig({
     importMap: { baseDir: path.resolve(dirname) },
     meta: { titleSuffix: '— Earl Knows' },
   },
-  collections: [Services, Cities, Providers, Territories, Applications, Leads, Media, Users],
+  collections: [Services, Markets, Cities, Providers, Territories, Applications, Leads, Media, Users],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },

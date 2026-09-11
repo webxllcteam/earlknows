@@ -99,9 +99,9 @@ export const Providers: CollectionConfig = {
         {
           name: 'serviceAreas',
           type: 'relationship',
-          relationTo: 'cities',
+          relationTo: 'markets',
           hasMany: true,
-          admin: { description: 'Markets they will travel to.' },
+          admin: { description: 'Metro areas they cover.' },
         },
         {
           name: 'listedIn',

@@ -61,6 +61,34 @@ export default async function ProviderPage({ params }: { params: Promise<Params>
     limit: 100,
   })
 
+  // Territories are per-market; link to every city page in those markets.
+  const marketIds = territories.docs
+    .map((t) => (typeof t.market === 'object' ? t.market?.id : t.market))
+    .filter((v): v is number => typeof v === 'number')
+
+  const cities = marketIds.length
+    ? await payload.find({
+        collection: 'cities',
+        where: { and: [{ market: { in: marketIds } }, { active: { equals: true } }] },
+        depth: 1,
+        limit: 200,
+      })
+    : { docs: [] as Awaited<ReturnType<typeof payload.find>>['docs'] }
+
+  const listings = territories.docs.flatMap((t) => {
+    const service = t.service as { slug?: string; name?: string }
+    const tMarketId = typeof t.market === 'object' ? t.market?.id : t.market
+    if (!service?.slug) return []
+    return cities.docs
+      .filter((c) => (typeof c.market === 'object' ? c.market?.id : c.market) === tMarketId)
+      .map((c) => ({
+        key: `${t.id}-${c.id}`,
+        href: `/${c.slug}/${service.slug}`,
+        service: service.name,
+        city: `${c.name}, ${c.state}`,
+      }))
+  })
+
   const addr = (provider.address ?? {}) as Record<string, string>
 
   const jsonLd = {
@@ -123,25 +151,18 @@ export default async function ProviderPage({ params }: { params: Promise<Params>
         </>
       )}
 
-      {territories.docs.length > 0 && (
+      {listings.length > 0 && (
         <>
           <h2>Where Earl recommends them</h2>
           <ul className="grid">
-            {territories.docs.map((t) => {
-              const service = t.service as { slug?: string; name?: string }
-              const city = t.city as { slug?: string; name?: string; state?: string }
-              if (!service?.slug || !city?.slug) return null
-              return (
-                <li key={t.id}>
-                  <Link className="card" href={`/${city.slug}/${service.slug}`}>
-                    <span className="card-title">{service.name}</span>
-                    <span className="card-note">
-                      {city.name}, {city.state}
-                    </span>
-                  </Link>
-                </li>
-              )
-            })}
+            {listings.map((l) => (
+              <li key={l.key}>
+                <Link className="card" href={l.href}>
+                  <span className="card-title">{l.service}</span>
+                  <span className="card-note">{l.city}</span>
+                </Link>
+              </li>
+            ))}
           </ul>
         </>
       )}

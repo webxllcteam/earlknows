@@ -4,8 +4,8 @@ export const Cities: CollectionConfig = {
   slug: 'cities',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'state', 'slug', 'active'],
-    description: 'Markets Earl operates in. Each becomes a /[city]/ hub page.',
+    defaultColumns: ['name', 'state', 'market', 'slug', 'active'],
+    description: 'Towns with their own page. Only create one you can write real local content for.',
     group: 'Catalog',
   },
   fields: [
@@ -33,11 +33,14 @@ export const Cities: CollectionConfig = {
       ],
     },
     {
-      name: 'nearby',
+      name: 'market',
       type: 'relationship',
-      relationTo: 'cities',
-      hasMany: true,
-      admin: { description: 'Neighbouring markets to cross-link. Helps authority circulate.' },
+      relationTo: 'markets',
+      required: true,
+      admin: {
+        description:
+          'Which metro this town belongs to. Territories are sold per market, so every city in a market shares the same panel.',
+      },
     },
     { name: 'active', type: 'checkbox', defaultValue: true },
   ],

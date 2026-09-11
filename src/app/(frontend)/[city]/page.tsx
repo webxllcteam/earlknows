@@ -24,6 +24,7 @@ async function getCity(slug: string) {
     collection: 'cities',
     where: { and: [{ slug: { equals: slug } }, { active: { equals: true } }] },
     limit: 1,
+    depth: 1,
   })
   return res.docs[0] ?? null
 }
@@ -46,12 +47,16 @@ export default async function CityPage({ params }: { params: Promise<Params> }) 
   if (!city) notFound()
 
   const payload = await payloadClient()
-  const territories = await payload.find({
-    collection: 'territories',
-    where: { and: [{ city: { equals: city.id } }, { status: { equals: 'live' } }] },
-    depth: 2,
-    limit: 200,
-  })
+  const marketId = typeof city.market === 'object' ? city.market?.id : city.market
+
+  const territories = marketId
+    ? await payload.find({
+        collection: 'territories',
+        where: { and: [{ market: { equals: marketId } }, { status: { equals: 'live' } }] },
+        depth: 2,
+        limit: 200,
+      })
+    : { docs: [] as Awaited<ReturnType<typeof payload.find>>['docs'] }
 
   const jsonLd = {
     '@context': 'https://schema.org',

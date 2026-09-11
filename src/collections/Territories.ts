@@ -10,7 +10,7 @@ export const Territories: CollectionConfig = {
   admin: {
     useAsTitle: 'label',
     defaultColumns: ['label', 'status', 'provider', 'monthlyRate'],
-    description: 'One service × one city. Exclusivity is enforced here.',
+    description: 'One service × one market. This is the unit a contractor buys.',
     group: 'Network',
   },
   hooks: {
@@ -18,14 +18,14 @@ export const Territories: CollectionConfig = {
       async ({ data, req }) => {
         // Keep a readable label so the admin list is scannable.
         const serviceId = typeof data.service === 'object' ? data.service?.id : data.service
-        const cityId = typeof data.city === 'object' ? data.city?.id : data.city
-        if (serviceId && cityId) {
+        const marketId = typeof data.market === 'object' ? data.market?.id : data.market
+        if (serviceId && marketId) {
           try {
-            const [service, city] = await Promise.all([
+            const [service, market] = await Promise.all([
               req.payload.findByID({ collection: 'services', id: serviceId, depth: 0 }),
-              req.payload.findByID({ collection: 'cities', id: cityId, depth: 0 }),
+              req.payload.findByID({ collection: 'markets', id: marketId, depth: 0 }),
             ])
-            data.label = `${service.name} — ${city.name}, ${city.state}`
+            data.label = `${service.name} — ${market.name}, ${market.state}`
           } catch {
             // Leave the existing label alone if either lookup fails.
           }
@@ -62,9 +62,9 @@ export const Territories: CollectionConfig = {
           admin: { width: '50%' },
         },
         {
-          name: 'city',
+          name: 'market',
           type: 'relationship',
-          relationTo: 'cities',
+          relationTo: 'markets',
           required: true,
           admin: { width: '50%' },
         },
@@ -80,11 +80,12 @@ export const Territories: CollectionConfig = {
       filterOptions: ({ data }) => {
         const serviceId =
           typeof data?.service === 'object' ? data?.service?.id : (data?.service as number)
-        const cityId = typeof data?.city === 'object' ? data?.city?.id : (data?.city as number)
+        const marketId =
+          typeof data?.market === 'object' ? data?.market?.id : (data?.market as number)
 
         const and: Record<string, unknown>[] = [{ status: { equals: 'active' } }]
         if (serviceId) and.push({ services: { contains: serviceId } })
-        if (cityId) and.push({ serviceAreas: { contains: cityId } })
+        if (marketId) and.push({ serviceAreas: { contains: marketId } })
         return { and }
       },
       admin: {

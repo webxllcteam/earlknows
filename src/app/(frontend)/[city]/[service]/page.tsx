@@ -36,30 +36,54 @@ function rotateDaily<T>(items: T[]): T[] {
 
 export async function generateStaticParams() {
   const payload = await payloadClient()
-  const territories = await payload.find({ collection: 'territories', depth: 1, limit: 1000 })
-  return territories.docs
-    .map((t) => {
+  const [territories, cities] = await Promise.all([
+    payload.find({ collection: 'territories', depth: 1, limit: 1000 }),
+    payload.find({
+      collection: 'cities',
+      where: { active: { equals: true } },
+      depth: 1,
+      limit: 1000,
+    }),
+  ])
+
+  // Every city in a market gets a page for each of that market's services.
+  const params: { city: string; service: string }[] = []
+  for (const city of cities.docs) {
+    const cityMarketId = typeof city.market === 'object' ? city.market?.id : city.market
+    if (!city.slug || !cityMarketId) continue
+    for (const t of territories.docs) {
+      const tMarketId = typeof t.market === 'object' ? t.market?.id : t.market
       const service = t.service as { slug?: string }
-      const city = t.city as { slug?: string }
-      if (!service?.slug || !city?.slug) return null
-      return { city: city.slug, service: service.slug }
-    })
-    .filter((v): v is { city: string; service: string } => v !== null)
+      if (tMarketId === cityMarketId && service?.slug) {
+        params.push({ city: String(city.slug), service: service.slug })
+      }
+    }
+  }
+  return params
 }
 
 async function getTerritory(citySlug: string, serviceSlug: string) {
   const payload = await payloadClient()
   const [services, cities] = await Promise.all([
     payload.find({ collection: 'services', where: { slug: { equals: serviceSlug } }, limit: 1 }),
-    payload.find({ collection: 'cities', where: { slug: { equals: citySlug } }, limit: 1 }),
+    payload.find({
+      collection: 'cities',
+      where: { and: [{ slug: { equals: citySlug } }, { active: { equals: true } }] },
+      limit: 1,
+      depth: 1,
+    }),
   ])
   const service = services.docs[0]
   const city = cities.docs[0]
   if (!service || !city) return null
 
+  // A city inherits its panel from the market it belongs to.
+  const marketId = typeof city.market === 'object' ? city.market?.id : city.market
+  if (!marketId) return null
+
   const territories = await payload.find({
     collection: 'territories',
-    where: { and: [{ service: { equals: service.id } }, { city: { equals: city.id } }] },
+    where: { and: [{ service: { equals: service.id } }, { market: { equals: marketId } }] },
     depth: 2,
     limit: 1,
   })
