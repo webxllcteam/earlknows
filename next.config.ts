@@ -23,6 +23,19 @@ const nextConfig: NextConfig = {
 
     return webpackConfig
   },
+  async redirects() {
+    // One canonical hostname. Anything else 301s to it, so search engines never
+    // see the same page at two URLs and split its authority.
+    const canonical = 'https://earlknows.com'
+    const alternates = ['www.earlknows.com', 'earlknows-web-production.up.railway.app']
+
+    return alternates.map((host) => ({
+      source: '/:path*',
+      has: [{ type: 'host' as const, value: host }],
+      destination: `${canonical}/:path*`,
+      permanent: true,
+    }))
+  },
   async headers() {
     return [
       {
