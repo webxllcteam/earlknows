@@ -75,9 +75,21 @@ export const Territories: CollectionConfig = {
       type: 'relationship',
       relationTo: 'providers',
       hasMany: true,
+      // Only offer contractors who said they cover this trade in this market.
+      // A provider's declared coverage does not list them — this field does.
+      filterOptions: ({ data }) => {
+        const serviceId =
+          typeof data?.service === 'object' ? data?.service?.id : (data?.service as number)
+        const cityId = typeof data?.city === 'object' ? data?.city?.id : (data?.city as number)
+
+        const and: Record<string, unknown>[] = [{ status: { equals: 'active' } }]
+        if (serviceId) and.push({ services: { contains: serviceId } })
+        if (cityId) and.push({ serviceAreas: { contains: cityId } })
+        return { and }
+      },
       admin: {
         description:
-          'The panel for this market. Shown in rotating order — never ranked, since the order is arbitrary.',
+          'THIS is what publishes a contractor on the page. Only active providers who cover this trade and market appear here. Shown in rotating order — never ranked.',
       },
     },
     {

@@ -86,7 +86,7 @@ export const Providers: CollectionConfig = {
       label: 'Coverage',
       admin: {
         description:
-          'What this contractor can do and where. Separate from where Earl actually lists them — that is a commercial decision, set on the Territory.',
+          'What this contractor can do and where they will travel. Filling this in does NOT publish them — it only makes them selectable on matching Territories. Publishing happens on the Territory record.',
       },
       fields: [
         {
@@ -111,7 +111,7 @@ export const Providers: CollectionConfig = {
           admin: {
             allowCreate: false,
             description:
-              'Where Earl currently lists them. Read-only — add or remove a provider from the Territory record.',
+              'Where Earl currently lists them. Read-only. If this is empty the contractor appears nowhere on the site — open the matching Territory and add them to its Providers panel.',
           },
         },
       ],

@@ -271,7 +271,7 @@ export interface Provider {
    */
   serviceAreas?: (number | City)[] | null;
   /**
-   * Where Earl currently lists them. Read-only — add or remove a provider from the Territory record.
+   * Where Earl currently lists them. Read-only. If this is empty the contractor appears nowhere on the site — open the matching Territory and add them to its Providers panel.
    */
   listedIn?: {
     docs?: (number | Territory)[];
@@ -325,7 +325,7 @@ export interface Territory {
   service: number | Service;
   city: number | City;
   /**
-   * The panel for this market. Shown in rotating order — never ranked, since the order is arbitrary.
+   * THIS is what publishes a contractor on the page. Only active providers who cover this trade and market appear here. Shown in rotating order — never ranked.
    */
   providers?: (number | Provider)[] | null;
   /**
