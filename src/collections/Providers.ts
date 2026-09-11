@@ -99,9 +99,12 @@ export const Providers: CollectionConfig = {
         {
           name: 'serviceAreas',
           type: 'relationship',
-          relationTo: 'cities',
+          relationTo: 'markets',
           hasMany: true,
-          admin: { description: 'Towns they will work in. This is the unit Earl sells.' },
+          admin: {
+            description:
+              'Metros they cover. One subscription per trade per metro — they never pick individual towns.',
+          },
         },
         {
           name: 'listedIn',

@@ -46,35 +46,30 @@ The competitors we're positioned against:
   because it caps revenue per market arithmetically, gives every page a
   single point of supply failure, and can't load-balance lead volume.
 
-- **2026-09-11 — The geographic model, settled.** Four record types:
-  - **Markets** — a metro (Treasure Valley). Groups cities. *Not billed.*
-  - **Cities** — belong to a market. Boise, Meridian, Nampa, Eagle.
-  - **Listings** — service × **city**. The billable unit: panel, cap, monthly
-    rate, and the words for `/[city]/[service]`.
-  - **Market pages** — service × **market**. Content only; the panel is the union
-    of that market's city listings. Powers `/[market]/[service]`.
+- **2026-09-11 — The geographic model, FINAL.** Billing is per **service ×
+  market**; cities are SEO surface only.
+  - **Markets** — a metro (Treasure Valley). How people browse, Craigslist-style.
+  - **Cities** — belong to a market. Pages only; never sold.
+  - **Listings** — service × **market**. *Billable.* Panel, cap, monthly rate,
+    and the words for `/[market]/[service]`.
+  - **City pages** — service × **city**. Content only. Panel inherited from the
+    market's listing; owns its own words.
 
-  A *place* is a city or a market — both are things people search for, so both
-  get `/[place]/[service]` pages.
+  A *place* is a market or a city; both serve `/[place]/[service]`.
 
-  *Evolved through two wrong turns:* first service × city with no metro concept
-  (a valley-wide contractor would need seven assignments), then service × market
-  with no city pages (identical content across towns — the doorway pattern).
-  Billing landed on **city** because that's the unit shoppers type and it avoids
-  a ZIP layer entirely; a metro-covering contractor buys several cities, and the
-  answer to "why am I paying four times?" is a bundle price, not a schema change.
-  Market pages exist because "roofers in the treasure valley" is real search
-  volume a market with no page can't capture.
+  *Reached after three wrong turns, all caused by the same mistake — assuming the
+  billing unit and the page have to be the same thing.* They don't. Craigslist
+  regionalises Idaho into four areas and nobody minds, because a contractor
+  serves a metro. Splitting that into town-sized commercial units was fighting
+  reality, which is why pricing kept feeling muddy. But city pages still have to
+  exist, because "roofer boise" massively outdraws "roofer treasure valley".
 
-  *Rule:* a market page stays `draft` until 2+ cities under it are live —
-  otherwise it duplicates its only child.
-  *Market hub behaviour:* `/[market]` derives its trade list from the live city
-  listings beneath it, NOT from which trades have a market page. A trade with no
-  live market page still appears, listed with the towns that carry it; its
-  heading becomes a link only once that market page is published.
-  *Schema note:* a Boise contractor shown on a Meridian page keeps their real
-  Boise address in `LocalBusiness`, with `areaServed` covering Meridian. Never
-  fabricate a local address.
+  One subscription per trade per metro. A roofer who also does gutters buys two.
+  Expanding to Twin Falls buys a third. No city-level price discrimination — the
+  levers are the metro price and the cap.
+
+  *Rule:* a city page must say something a neighbouring town's page would not.
+  If deleting the city name leaves nothing unique, it's a doorway page.
 
 - **2026-09-11 — Over-cap providers go on a waitlist.** They see "not accepting
   new providers here right now" and can leave details. This doubles as a demand

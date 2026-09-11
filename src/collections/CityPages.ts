@@ -1,35 +1,36 @@
 import type { CollectionConfig } from 'payload'
 
 /**
- * The aggregate page for a whole metro — /[market]/[service].
- * People really do search "roofers in the treasure valley", and a market with
- * no page can't capture that.
+ * A town-level page — /[city]/[service]. People search "roofer boise" far more
+ * than they search the metro, so these capture the volume.
  *
- * Not billable. The contractors shown are the union of that market's city
- * listings; this record only owns the words. Hold it unpublished until at least
- * two cities are live, or it's just a duplicate of its only child.
+ * Not billable, and it does not own a panel: the contractors shown are whoever
+ * is on the market's Listing. What it owns is its own words, which is the only
+ * thing that keeps ten city pages from being ten near-duplicates.
+ *
+ * Don't create one you can't write real local content for.
  */
-export const MarketPages: CollectionConfig = {
-  slug: 'market-pages',
-  labels: { singular: 'Market page', plural: 'Market pages' },
+export const CityPages: CollectionConfig = {
+  slug: 'city-pages',
+  labels: { singular: 'City page', plural: 'City pages' },
   admin: {
     useAsTitle: 'label',
     defaultColumns: ['label', 'status'],
-    description: 'Metro-wide pages that aggregate the city listings beneath them.',
+    description: 'Town pages. Each needs genuinely local content — see CLAUDE.md on doorway pages.',
     group: 'Content',
   },
   hooks: {
     beforeChange: [
       async ({ data, req }) => {
         const serviceId = typeof data.service === 'object' ? data.service?.id : data.service
-        const marketId = typeof data.market === 'object' ? data.market?.id : data.market
-        if (serviceId && marketId) {
+        const cityId = typeof data.city === 'object' ? data.city?.id : data.city
+        if (serviceId && cityId) {
           try {
-            const [service, market] = await Promise.all([
+            const [service, city] = await Promise.all([
               req.payload.findByID({ collection: 'services', id: serviceId, depth: 0 }),
-              req.payload.findByID({ collection: 'markets', id: marketId, depth: 0 }),
+              req.payload.findByID({ collection: 'cities', id: cityId, depth: 0 }),
             ])
-            data.label = `${service.name} — ${market.name}, ${market.state}`
+            data.label = `${service.name} — ${city.name}, ${city.state}`
           } catch {
             /* leave the existing label */
           }
@@ -56,7 +57,7 @@ export const MarketPages: CollectionConfig = {
       admin: {
         position: 'sidebar',
         description:
-          'Keep as draft until two or more cities in this market are live — otherwise it duplicates its only child.',
+          'Publish only once this page says something a neighbouring town\'s page would not.',
       },
     },
     {
@@ -70,9 +71,9 @@ export const MarketPages: CollectionConfig = {
           admin: { width: '50%' },
         },
         {
-          name: 'market',
+          name: 'city',
           type: 'relationship',
-          relationTo: 'markets',
+          relationTo: 'cities',
           required: true,
           admin: { width: '50%' },
         },
@@ -89,8 +90,22 @@ export const MarketPages: CollectionConfig = {
       type: 'richText',
       admin: {
         description:
-          'Write about the metro, not one town — coverage across the valley, how to choose between areas, what varies by part of the region.',
+          'Write about THIS town: permit office, housing stock, what fails here, named neighbourhoods. If deleting the city name leaves nothing unique, it is a doorway page.',
       },
+    },
+    {
+      name: 'localNotes',
+      type: 'richText',
+      admin: {
+        description: 'The part nobody can copy — local conditions, rules, real examples.',
+      },
+    },
+    {
+      type: 'row',
+      fields: [
+        { name: 'priceLow', type: 'number', admin: { width: '50%' } },
+        { name: 'priceHigh', type: 'number', admin: { width: '50%' } },
+      ],
     },
     {
       name: 'faqs',

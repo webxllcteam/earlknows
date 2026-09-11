@@ -56,66 +56,52 @@ export default async function PlacePage({ params }: { params: Promise<Params> })
   }[] = []
 
   if (place.kind === 'city') {
-    const listings = await payload.find({
-      collection: 'listings',
+    const pages = await payload.find({
+      collection: 'city-pages',
       where: { and: [{ city: { equals: place.id } }, { status: { equals: 'live' } }] },
-      depth: 2,
+      depth: 1,
       limit: 200,
     })
-    for (const l of listings.docs) {
-      const service = l.service as { slug?: string; name?: string }
+    for (const p of pages.docs) {
+      const service = p.service as { slug?: string; name?: string }
       if (!service?.slug) continue
-      const panel = Array.isArray(l.providers) ? l.providers.length : 0
-      trades.push({
-        slug: service.slug,
-        name: String(service.name),
-        note:
-          panel === 0
-            ? 'Earl is still vetting'
-            : `${panel} vetted ${panel === 1 ? 'contractor' : 'contractors'}`,
-      })
+      trades.push({ slug: service.slug, name: String(service.name), note: `In ${place.name}` })
     }
   } else if (towns.length > 0) {
-    const [listings, pages] = await Promise.all([
+    const [listings, cityPages] = await Promise.all([
       payload.find({
         collection: 'listings',
-        where: {
-          and: [{ city: { in: towns.map((t) => t.id) } }, { status: { equals: 'live' } }],
-        },
+        where: { and: [{ market: { equals: place.id } }, { status: { equals: 'live' } }] },
         depth: 2,
-        limit: 500,
+        limit: 200,
       }),
       payload.find({
-        collection: 'market-pages',
-        where: { and: [{ market: { equals: place.id } }, { status: { equals: 'live' } }] },
+        collection: 'city-pages',
+        where: { and: [{ city: { in: towns.map((t) => t.id) } }, { status: { equals: 'live' } }] },
         depth: 1,
-        limit: 200,
+        limit: 500,
       }),
     ])
 
-    // Which trades have their own market page, so we can link the heading there.
-    const withMarketPage = new Set(
-      pages.docs
-        .map((p) => (p.service as { slug?: string })?.slug)
-        .filter((v): v is string => Boolean(v)),
-    )
-
-    const grouped = new Map<string, (typeof marketTrades)[number]>()
     for (const l of listings.docs) {
       const service = l.service as { slug?: string; name?: string }
-      const city = l.city as { slug?: string; name?: string; state?: string; active?: boolean }
-      if (!service?.slug || !city?.slug || city.active === false) continue
+      if (!service?.slug) continue
 
-      const entry = grouped.get(service.slug) ?? {
+      const towns2 = cityPages.docs
+        .filter((p) => (p.service as { slug?: string })?.slug === service.slug)
+        .map((p) => {
+          const c = p.city as { slug?: string; name?: string; state?: string }
+          return c?.slug ? { slug: c.slug, label: `${c.name}, ${c.state}` } : null
+        })
+        .filter((v): v is { slug: string; label: string } => v !== null)
+
+      marketTrades.push({
         slug: service.slug,
         name: String(service.name),
-        href: withMarketPage.has(service.slug) ? `/${slug}/${service.slug}` : null,
-        towns: [],
-      }
-      entry.towns.push({ slug: city.slug, label: `${city.name}, ${city.state}` })
-      grouped.set(service.slug, entry)
+        href: `/${slug}/${service.slug}`,
+        towns: towns2,
+      })
     }
-    marketTrades.push(...grouped.values())
   }
 
   const heading =

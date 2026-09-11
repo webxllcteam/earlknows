@@ -72,7 +72,7 @@ export interface Config {
     cities: City;
     providers: Provider;
     listings: Listing;
-    'market-pages': MarketPage;
+    'city-pages': CityPage;
     applications: Application;
     leads: Lead;
     media: Media;
@@ -93,7 +93,7 @@ export interface Config {
     cities: CitiesSelect<false> | CitiesSelect<true>;
     providers: ProvidersSelect<false> | ProvidersSelect<true>;
     listings: ListingsSelect<false> | ListingsSelect<true>;
-    'market-pages': MarketPagesSelect<false> | MarketPagesSelect<true>;
+    'city-pages': CityPagesSelect<false> | CityPagesSelect<true>;
     applications: ApplicationsSelect<false> | ApplicationsSelect<true>;
     leads: LeadsSelect<false> | LeadsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
@@ -296,9 +296,9 @@ export interface Provider {
    */
   services?: (number | Service)[] | null;
   /**
-   * Towns they will work in. This is the unit Earl sells.
+   * Metros they cover. One subscription per trade per metro — they never pick individual towns.
    */
-  serviceAreas?: (number | City)[] | null;
+  serviceAreas?: (number | Market)[] | null;
   /**
    * Where Earl currently lists them. Read-only. If this is empty the contractor appears nowhere on the site — open the matching Listing and add them to its Providers panel.
    */
@@ -339,7 +339,7 @@ export interface Media {
   focalY?: number | null;
 }
 /**
- * One service × one city. This is what a contractor buys and what a shopper reads.
+ * One service × one market. This is what a contractor buys.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "listings".
@@ -352,17 +352,17 @@ export interface Listing {
   label?: string | null;
   status: 'live' | 'paused';
   service: number | Service;
-  city: number | City;
+  market: number | Market;
   /**
-   * THIS is what publishes a contractor on the page. Only active providers who cover this trade in this city appear here. Shown in rotating order — never ranked.
+   * THIS is what publishes a contractor on the page. Only active providers who cover this trade in this metro appear here. Shown in rotating order — never ranked.
    */
   providers?: (number | Provider)[] | null;
   /**
-   * How many providers we currently accept in this city. Once the panel is full, applicants are waitlisted.
+   * How many providers we currently accept in this metro. Once the panel is full, applicants are waitlisted.
    */
   maxProviders: number;
   /**
-   * Flat USD per slot, per month.
+   * Flat USD per slot, per month. One subscription per trade per metro.
    */
   monthlyRate?: number | null;
   /**
@@ -431,23 +431,23 @@ export interface Listing {
   createdAt: string;
 }
 /**
- * Metro-wide pages that aggregate the city listings beneath them.
+ * Town pages. Each needs genuinely local content — see CLAUDE.md on doorway pages.
  *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "market-pages".
+ * via the `definition` "city-pages".
  */
-export interface MarketPage {
+export interface CityPage {
   id: number;
   /**
    * Generated automatically.
    */
   label?: string | null;
   /**
-   * Keep as draft until two or more cities in this market are live — otherwise it duplicates its only child.
+   * Publish only once this page says something a neighbouring town's page would not.
    */
   status: 'draft' | 'live';
   service: number | Service;
-  market: number | Market;
+  city: number | City;
   /**
    * Under ~60 characters.
    */
@@ -457,7 +457,7 @@ export interface MarketPage {
    */
   metaDescription?: string | null;
   /**
-   * Write about the metro, not one town — coverage across the valley, how to choose between areas, what varies by part of the region.
+   * Write about THIS town: permit office, housing stock, what fails here, named neighbourhoods. If deleting the city name leaves nothing unique, it is a doorway page.
    */
   intro?: {
     root: {
@@ -474,6 +474,26 @@ export interface MarketPage {
     };
     [k: string]: unknown;
   } | null;
+  /**
+   * The part nobody can copy — local conditions, rules, real examples.
+   */
+  localNotes?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  priceLow?: number | null;
+  priceHigh?: number | null;
   /**
    * Published as FAQPage schema.
    */
@@ -620,8 +640,8 @@ export interface PayloadLockedDocument {
         value: number | Listing;
       } | null)
     | ({
-        relationTo: 'market-pages';
-        value: number | MarketPage;
+        relationTo: 'city-pages';
+        value: number | CityPage;
       } | null)
     | ({
         relationTo: 'applications';
@@ -764,7 +784,7 @@ export interface ListingsSelect<T extends boolean = true> {
   label?: T;
   status?: T;
   service?: T;
-  city?: T;
+  market?: T;
   providers?: T;
   maxProviders?: T;
   monthlyRate?: T;
@@ -786,16 +806,19 @@ export interface ListingsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "market-pages_select".
+ * via the `definition` "city-pages_select".
  */
-export interface MarketPagesSelect<T extends boolean = true> {
+export interface CityPagesSelect<T extends boolean = true> {
   label?: T;
   status?: T;
   service?: T;
-  market?: T;
+  city?: T;
   metaTitle?: T;
   metaDescription?: T;
   intro?: T;
+  localNotes?: T;
+  priceLow?: T;
+  priceHigh?: T;
   faqs?:
     | T
     | {

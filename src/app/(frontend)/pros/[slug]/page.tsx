@@ -63,14 +63,14 @@ export default async function ProviderPage({ params }: { params: Promise<Params>
 
   const listings = found.docs.flatMap((l) => {
     const service = l.service as { slug?: string; name?: string }
-    const city = l.city as { slug?: string; name?: string; state?: string; active?: boolean }
-    if (!service?.slug || !city?.slug || city.active === false) return []
+    const market = l.market as { slug?: string; name?: string; state?: string; active?: boolean }
+    if (!service?.slug || !market?.slug || market.active === false) return []
     return [
       {
         key: String(l.id),
-        href: `/${city.slug}/${service.slug}`,
+        href: `/${market.slug}/${service.slug}`,
         service: service.name,
-        city: `${city.name}, ${city.state}`,
+        city: `${market.name}, ${market.state}`,
       },
     ]
   })

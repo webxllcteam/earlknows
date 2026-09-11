@@ -43,7 +43,7 @@ const toProviders = (v: unknown): ProviderDoc[] =>
 
 export async function generateStaticParams() {
   const payload = await payloadClient()
-  const [listings, marketPages] = await Promise.all([
+  const [listings, cityPages] = await Promise.all([
     payload.find({
       collection: 'listings',
       where: { status: { equals: 'live' } },
@@ -51,10 +51,10 @@ export async function generateStaticParams() {
       limit: 1000,
     }),
     payload.find({
-      collection: 'market-pages',
+      collection: 'city-pages',
       where: { status: { equals: 'live' } },
       depth: 1,
-      limit: 1000,
+      limit: 2000,
     }),
   ])
 
@@ -62,16 +62,16 @@ export async function generateStaticParams() {
 
   for (const l of listings.docs) {
     const service = l.service as { slug?: string }
-    const city = l.city as { slug?: string; active?: boolean }
-    if (service?.slug && city?.slug && city.active !== false) {
-      params.push({ place: city.slug, service: service.slug })
+    const market = l.market as { slug?: string; active?: boolean }
+    if (service?.slug && market?.slug && market.active !== false) {
+      params.push({ place: market.slug, service: service.slug })
     }
   }
-  for (const p of marketPages.docs) {
+  for (const p of cityPages.docs) {
     const service = p.service as { slug?: string }
-    const market = p.market as { slug?: string }
-    if (service?.slug && market?.slug) {
-      params.push({ place: market.slug, service: service.slug })
+    const city = p.city as { slug?: string; active?: boolean }
+    if (service?.slug && city?.slug && city.active !== false) {
+      params.push({ place: city.slug, service: service.slug })
     }
   }
   return params
@@ -92,13 +92,13 @@ async function getPageData(placeSlug: string, serviceSlug: string) {
   const service = services.docs[0]
   if (!service) return null
 
-  if (place.kind === 'city') {
+  if (place.kind === 'market') {
     const res = await payload.find({
       collection: 'listings',
       where: {
         and: [
           { service: { equals: service.id } },
-          { city: { equals: place.id } },
+          { market: { equals: place.id } },
           { status: { equals: 'live' } },
         ],
       },
@@ -126,62 +126,54 @@ async function getPageData(placeSlug: string, serviceSlug: string) {
     }
   }
 
-  // Market page: aggregate every live city listing beneath it.
-  const res = await payload.find({
-    collection: 'market-pages',
-    where: {
-      and: [
-        { service: { equals: service.id } },
-        { market: { equals: place.id } },
-        { status: { equals: 'live' } },
-      ],
-    },
-    depth: 1,
-    limit: 1,
-  })
-  const marketPage = res.docs[0]
-  if (!marketPage) return null
+  // City page: its own words, but the panel comes from its market's listing.
+  if (!place.marketId) return null
 
-  const towns = await citiesInMarket(place.id)
-  const listings = towns.length
-    ? await payload.find({
-        collection: 'listings',
-        where: {
-          and: [
-            { service: { equals: service.id } },
-            { city: { in: towns.map((t) => t.id) } },
-            { status: { equals: 'live' } },
-          ],
-        },
-        depth: 2,
-        limit: 200,
-      })
-    : { docs: [] }
+  const [pages, listings] = await Promise.all([
+    payload.find({
+      collection: 'city-pages',
+      where: {
+        and: [
+          { service: { equals: service.id } },
+          { city: { equals: place.id } },
+          { status: { equals: 'live' } },
+        ],
+      },
+      depth: 1,
+      limit: 1,
+    }),
+    payload.find({
+      collection: 'listings',
+      where: {
+        and: [
+          { service: { equals: service.id } },
+          { market: { equals: place.marketId } },
+          { status: { equals: 'live' } },
+        ],
+      },
+      depth: 2,
+      limit: 1,
+    }),
+  ])
 
-  const seen = new Set<number>()
-  const providers: ProviderDoc[] = []
-  for (const l of listings.docs) {
-    for (const p of toProviders(l.providers)) {
-      if (!seen.has(p.id)) {
-        seen.add(p.id)
-        providers.push(p)
-      }
-    }
-  }
+  const cityPage = pages.docs[0]
+  if (!cityPage) return null
+
+  const listing = listings.docs[0]
 
   return {
     place,
     service,
-    providers,
-    maxProviders: 0,
+    providers: toProviders(listing?.providers),
+    maxProviders: listing?.maxProviders ?? 3,
     content: {
-      metaTitle: marketPage.metaTitle,
-      metaDescription: marketPage.metaDescription,
-      intro: marketPage.intro,
-      localNotes: null,
-      priceLow: null,
-      priceHigh: null,
-      faqs: (Array.isArray(marketPage.faqs) ? marketPage.faqs : []) as Faq[],
+      metaTitle: cityPage.metaTitle,
+      metaDescription: cityPage.metaDescription,
+      intro: cityPage.intro,
+      localNotes: cityPage.localNotes,
+      priceLow: cityPage.priceLow,
+      priceHigh: cityPage.priceHigh,
+      faqs: (Array.isArray(cityPage.faqs) ? cityPage.faqs : []) as Faq[],
     },
     billable: false as const,
   }

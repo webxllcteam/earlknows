@@ -4,7 +4,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`
    CREATE TYPE "public"."enum_providers_status" AS ENUM('applied', 'vetting', 'active', 'paused', 'declined');
   CREATE TYPE "public"."enum_listings_status" AS ENUM('live', 'paused');
-  CREATE TYPE "public"."enum_market_pages_status" AS ENUM('draft', 'live');
+  CREATE TYPE "public"."enum_city_pages_status" AS ENUM('draft', 'live');
   CREATE TYPE "public"."enum_applications_status" AS ENUM('new', 'waitlisted', 'vetting', 'approved', 'declined');
   CREATE TYPE "public"."enum_leads_status" AS ENUM('new', 'contacted', 'quoted', 'won', 'lost');
   CREATE TABLE "services" (
@@ -73,7 +73,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"path" varchar NOT NULL,
   	"media_id" integer,
   	"services_id" integer,
-  	"cities_id" integer
+  	"markets_id" integer
   );
   
   CREATE TABLE "listings_faqs" (
@@ -89,7 +89,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"label" varchar,
   	"status" "enum_listings_status" DEFAULT 'live' NOT NULL,
   	"service_id" integer NOT NULL,
-  	"city_id" integer NOT NULL,
+  	"market_id" integer NOT NULL,
   	"max_providers" numeric DEFAULT 3 NOT NULL,
   	"monthly_rate" numeric,
   	"meta_title" varchar,
@@ -110,7 +110,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"providers_id" integer
   );
   
-  CREATE TABLE "market_pages_faqs" (
+  CREATE TABLE "city_pages_faqs" (
   	"_order" integer NOT NULL,
   	"_parent_id" integer NOT NULL,
   	"id" varchar PRIMARY KEY NOT NULL,
@@ -118,15 +118,18 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"answer" varchar NOT NULL
   );
   
-  CREATE TABLE "market_pages" (
+  CREATE TABLE "city_pages" (
   	"id" serial PRIMARY KEY NOT NULL,
   	"label" varchar,
-  	"status" "enum_market_pages_status" DEFAULT 'draft' NOT NULL,
+  	"status" "enum_city_pages_status" DEFAULT 'draft' NOT NULL,
   	"service_id" integer NOT NULL,
-  	"market_id" integer NOT NULL,
+  	"city_id" integer NOT NULL,
   	"meta_title" varchar,
   	"meta_description" varchar,
   	"intro" jsonb,
+  	"local_notes" jsonb,
+  	"price_low" numeric,
+  	"price_high" numeric,
   	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
   	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL
   );
@@ -227,7 +230,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"cities_id" integer,
   	"providers_id" integer,
   	"listings_id" integer,
-  	"market_pages_id" integer,
+  	"city_pages_id" integer,
   	"applications_id" integer,
   	"leads_id" integer,
   	"media_id" integer,
@@ -262,15 +265,15 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "providers_rels" ADD CONSTRAINT "providers_rels_parent_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."providers"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "providers_rels" ADD CONSTRAINT "providers_rels_media_fk" FOREIGN KEY ("media_id") REFERENCES "public"."media"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "providers_rels" ADD CONSTRAINT "providers_rels_services_fk" FOREIGN KEY ("services_id") REFERENCES "public"."services"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "providers_rels" ADD CONSTRAINT "providers_rels_cities_fk" FOREIGN KEY ("cities_id") REFERENCES "public"."cities"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "providers_rels" ADD CONSTRAINT "providers_rels_markets_fk" FOREIGN KEY ("markets_id") REFERENCES "public"."markets"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "listings_faqs" ADD CONSTRAINT "listings_faqs_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."listings"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "listings" ADD CONSTRAINT "listings_service_id_services_id_fk" FOREIGN KEY ("service_id") REFERENCES "public"."services"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "listings" ADD CONSTRAINT "listings_city_id_cities_id_fk" FOREIGN KEY ("city_id") REFERENCES "public"."cities"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "listings" ADD CONSTRAINT "listings_market_id_markets_id_fk" FOREIGN KEY ("market_id") REFERENCES "public"."markets"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "listings_rels" ADD CONSTRAINT "listings_rels_parent_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."listings"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "listings_rels" ADD CONSTRAINT "listings_rels_providers_fk" FOREIGN KEY ("providers_id") REFERENCES "public"."providers"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "market_pages_faqs" ADD CONSTRAINT "market_pages_faqs_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."market_pages"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "market_pages" ADD CONSTRAINT "market_pages_service_id_services_id_fk" FOREIGN KEY ("service_id") REFERENCES "public"."services"("id") ON DELETE set null ON UPDATE no action;
-  ALTER TABLE "market_pages" ADD CONSTRAINT "market_pages_market_id_markets_id_fk" FOREIGN KEY ("market_id") REFERENCES "public"."markets"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "city_pages_faqs" ADD CONSTRAINT "city_pages_faqs_parent_id_fk" FOREIGN KEY ("_parent_id") REFERENCES "public"."city_pages"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "city_pages" ADD CONSTRAINT "city_pages_service_id_services_id_fk" FOREIGN KEY ("service_id") REFERENCES "public"."services"("id") ON DELETE set null ON UPDATE no action;
+  ALTER TABLE "city_pages" ADD CONSTRAINT "city_pages_city_id_cities_id_fk" FOREIGN KEY ("city_id") REFERENCES "public"."cities"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "applications" ADD CONSTRAINT "applications_service_id_services_id_fk" FOREIGN KEY ("service_id") REFERENCES "public"."services"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "applications" ADD CONSTRAINT "applications_city_id_cities_id_fk" FOREIGN KEY ("city_id") REFERENCES "public"."cities"("id") ON DELETE set null ON UPDATE no action;
   ALTER TABLE "leads" ADD CONSTRAINT "leads_service_id_services_id_fk" FOREIGN KEY ("service_id") REFERENCES "public"."services"("id") ON DELETE set null ON UPDATE no action;
@@ -283,7 +286,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_cities_fk" FOREIGN KEY ("cities_id") REFERENCES "public"."cities"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_providers_fk" FOREIGN KEY ("providers_id") REFERENCES "public"."providers"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_listings_fk" FOREIGN KEY ("listings_id") REFERENCES "public"."listings"("id") ON DELETE cascade ON UPDATE no action;
-  ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_market_pages_fk" FOREIGN KEY ("market_pages_id") REFERENCES "public"."market_pages"("id") ON DELETE cascade ON UPDATE no action;
+  ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_city_pages_fk" FOREIGN KEY ("city_pages_id") REFERENCES "public"."city_pages"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_applications_fk" FOREIGN KEY ("applications_id") REFERENCES "public"."applications"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_leads_fk" FOREIGN KEY ("leads_id") REFERENCES "public"."leads"("id") ON DELETE cascade ON UPDATE no action;
   ALTER TABLE "payload_locked_documents_rels" ADD CONSTRAINT "payload_locked_documents_rels_media_fk" FOREIGN KEY ("media_id") REFERENCES "public"."media"("id") ON DELETE cascade ON UPDATE no action;
@@ -308,23 +311,23 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "providers_rels_path_idx" ON "providers_rels" USING btree ("path");
   CREATE INDEX "providers_rels_media_id_idx" ON "providers_rels" USING btree ("media_id");
   CREATE INDEX "providers_rels_services_id_idx" ON "providers_rels" USING btree ("services_id");
-  CREATE INDEX "providers_rels_cities_id_idx" ON "providers_rels" USING btree ("cities_id");
+  CREATE INDEX "providers_rels_markets_id_idx" ON "providers_rels" USING btree ("markets_id");
   CREATE INDEX "listings_faqs_order_idx" ON "listings_faqs" USING btree ("_order");
   CREATE INDEX "listings_faqs_parent_id_idx" ON "listings_faqs" USING btree ("_parent_id");
   CREATE INDEX "listings_service_idx" ON "listings" USING btree ("service_id");
-  CREATE INDEX "listings_city_idx" ON "listings" USING btree ("city_id");
+  CREATE INDEX "listings_market_idx" ON "listings" USING btree ("market_id");
   CREATE INDEX "listings_updated_at_idx" ON "listings" USING btree ("updated_at");
   CREATE INDEX "listings_created_at_idx" ON "listings" USING btree ("created_at");
   CREATE INDEX "listings_rels_order_idx" ON "listings_rels" USING btree ("order");
   CREATE INDEX "listings_rels_parent_idx" ON "listings_rels" USING btree ("parent_id");
   CREATE INDEX "listings_rels_path_idx" ON "listings_rels" USING btree ("path");
   CREATE INDEX "listings_rels_providers_id_idx" ON "listings_rels" USING btree ("providers_id");
-  CREATE INDEX "market_pages_faqs_order_idx" ON "market_pages_faqs" USING btree ("_order");
-  CREATE INDEX "market_pages_faqs_parent_id_idx" ON "market_pages_faqs" USING btree ("_parent_id");
-  CREATE INDEX "market_pages_service_idx" ON "market_pages" USING btree ("service_id");
-  CREATE INDEX "market_pages_market_idx" ON "market_pages" USING btree ("market_id");
-  CREATE INDEX "market_pages_updated_at_idx" ON "market_pages" USING btree ("updated_at");
-  CREATE INDEX "market_pages_created_at_idx" ON "market_pages" USING btree ("created_at");
+  CREATE INDEX "city_pages_faqs_order_idx" ON "city_pages_faqs" USING btree ("_order");
+  CREATE INDEX "city_pages_faqs_parent_id_idx" ON "city_pages_faqs" USING btree ("_parent_id");
+  CREATE INDEX "city_pages_service_idx" ON "city_pages" USING btree ("service_id");
+  CREATE INDEX "city_pages_city_idx" ON "city_pages" USING btree ("city_id");
+  CREATE INDEX "city_pages_updated_at_idx" ON "city_pages" USING btree ("updated_at");
+  CREATE INDEX "city_pages_created_at_idx" ON "city_pages" USING btree ("created_at");
   CREATE INDEX "applications_service_idx" ON "applications" USING btree ("service_id");
   CREATE INDEX "applications_city_idx" ON "applications" USING btree ("city_id");
   CREATE INDEX "applications_updated_at_idx" ON "applications" USING btree ("updated_at");
@@ -354,7 +357,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   CREATE INDEX "payload_locked_documents_rels_cities_id_idx" ON "payload_locked_documents_rels" USING btree ("cities_id");
   CREATE INDEX "payload_locked_documents_rels_providers_id_idx" ON "payload_locked_documents_rels" USING btree ("providers_id");
   CREATE INDEX "payload_locked_documents_rels_listings_id_idx" ON "payload_locked_documents_rels" USING btree ("listings_id");
-  CREATE INDEX "payload_locked_documents_rels_market_pages_id_idx" ON "payload_locked_documents_rels" USING btree ("market_pages_id");
+  CREATE INDEX "payload_locked_documents_rels_city_pages_id_idx" ON "payload_locked_documents_rels" USING btree ("city_pages_id");
   CREATE INDEX "payload_locked_documents_rels_applications_id_idx" ON "payload_locked_documents_rels" USING btree ("applications_id");
   CREATE INDEX "payload_locked_documents_rels_leads_id_idx" ON "payload_locked_documents_rels" USING btree ("leads_id");
   CREATE INDEX "payload_locked_documents_rels_media_id_idx" ON "payload_locked_documents_rels" USING btree ("media_id");
@@ -380,8 +383,8 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TABLE "listings_faqs" CASCADE;
   DROP TABLE "listings" CASCADE;
   DROP TABLE "listings_rels" CASCADE;
-  DROP TABLE "market_pages_faqs" CASCADE;
-  DROP TABLE "market_pages" CASCADE;
+  DROP TABLE "city_pages_faqs" CASCADE;
+  DROP TABLE "city_pages" CASCADE;
   DROP TABLE "applications" CASCADE;
   DROP TABLE "leads" CASCADE;
   DROP TABLE "media" CASCADE;
@@ -395,7 +398,7 @@ export async function down({ db, payload, req }: MigrateDownArgs): Promise<void>
   DROP TABLE "payload_migrations" CASCADE;
   DROP TYPE "public"."enum_providers_status";
   DROP TYPE "public"."enum_listings_status";
-  DROP TYPE "public"."enum_market_pages_status";
+  DROP TYPE "public"."enum_city_pages_status";
   DROP TYPE "public"."enum_applications_status";
   DROP TYPE "public"."enum_leads_status";`)
 }

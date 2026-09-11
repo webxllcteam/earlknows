@@ -14,7 +14,7 @@ import { Media } from './collections/Media'
 import { Providers } from './collections/Providers'
 import { Services } from './collections/Services'
 import { Listings } from './collections/Listings'
-import { MarketPages } from './collections/MarketPages'
+import { CityPages } from './collections/CityPages'
 import { Users } from './collections/Users'
 
 const filename = fileURLToPath(import.meta.url)
@@ -32,7 +32,7 @@ export default buildConfig({
     Cities,
     Providers,
     Listings,
-    MarketPages,
+    CityPages,
     Applications,
     Leads,
     Media,

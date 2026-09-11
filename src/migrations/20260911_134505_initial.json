@@ -606,8 +606,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "cities_id": {
-          "name": "cities_id",
+        "markets_id": {
+          "name": "markets_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
@@ -689,11 +689,11 @@
           "method": "btree",
           "with": {}
         },
-        "providers_rels_cities_id_idx": {
-          "name": "providers_rels_cities_id_idx",
+        "providers_rels_markets_id_idx": {
+          "name": "providers_rels_markets_id_idx",
           "columns": [
             {
-              "expression": "cities_id",
+              "expression": "markets_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -745,12 +745,12 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "providers_rels_cities_fk": {
-          "name": "providers_rels_cities_fk",
+        "providers_rels_markets_fk": {
+          "name": "providers_rels_markets_fk",
           "tableFrom": "providers_rels",
-          "tableTo": "cities",
+          "tableTo": "markets",
           "columnsFrom": [
-            "cities_id"
+            "markets_id"
           ],
           "columnsTo": [
             "id"
@@ -883,8 +883,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "city_id": {
-          "name": "city_id",
+        "market_id": {
+          "name": "market_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -969,11 +969,11 @@
           "method": "btree",
           "with": {}
         },
-        "listings_city_idx": {
-          "name": "listings_city_idx",
+        "listings_market_idx": {
+          "name": "listings_market_idx",
           "columns": [
             {
-              "expression": "city_id",
+              "expression": "market_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1029,12 +1029,12 @@
           "onDelete": "set null",
           "onUpdate": "no action"
         },
-        "listings_city_id_cities_id_fk": {
-          "name": "listings_city_id_cities_id_fk",
+        "listings_market_id_markets_id_fk": {
+          "name": "listings_market_id_markets_id_fk",
           "tableFrom": "listings",
-          "tableTo": "cities",
+          "tableTo": "markets",
           "columnsFrom": [
-            "city_id"
+            "market_id"
           ],
           "columnsTo": [
             "id"
@@ -1180,8 +1180,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.market_pages_faqs": {
-      "name": "market_pages_faqs",
+    "public.city_pages_faqs": {
+      "name": "city_pages_faqs",
       "schema": "",
       "columns": {
         "_order": {
@@ -1216,8 +1216,8 @@
         }
       },
       "indexes": {
-        "market_pages_faqs_order_idx": {
-          "name": "market_pages_faqs_order_idx",
+        "city_pages_faqs_order_idx": {
+          "name": "city_pages_faqs_order_idx",
           "columns": [
             {
               "expression": "_order",
@@ -1231,8 +1231,8 @@
           "method": "btree",
           "with": {}
         },
-        "market_pages_faqs_parent_id_idx": {
-          "name": "market_pages_faqs_parent_id_idx",
+        "city_pages_faqs_parent_id_idx": {
+          "name": "city_pages_faqs_parent_id_idx",
           "columns": [
             {
               "expression": "_parent_id",
@@ -1248,10 +1248,10 @@
         }
       },
       "foreignKeys": {
-        "market_pages_faqs_parent_id_fk": {
-          "name": "market_pages_faqs_parent_id_fk",
-          "tableFrom": "market_pages_faqs",
-          "tableTo": "market_pages",
+        "city_pages_faqs_parent_id_fk": {
+          "name": "city_pages_faqs_parent_id_fk",
+          "tableFrom": "city_pages_faqs",
+          "tableTo": "city_pages",
           "columnsFrom": [
             "_parent_id"
           ],
@@ -1268,8 +1268,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.market_pages": {
-      "name": "market_pages",
+    "public.city_pages": {
+      "name": "city_pages",
       "schema": "",
       "columns": {
         "id": {
@@ -1286,7 +1286,7 @@
         },
         "status": {
           "name": "status",
-          "type": "enum_market_pages_status",
+          "type": "enum_city_pages_status",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
@@ -1298,8 +1298,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "market_id": {
-          "name": "market_id",
+        "city_id": {
+          "name": "city_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -1322,6 +1322,24 @@
           "primaryKey": false,
           "notNull": false
         },
+        "local_notes": {
+          "name": "local_notes",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "price_low": {
+          "name": "price_low",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "price_high": {
+          "name": "price_high",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp(3) with time zone",
@@ -1338,8 +1356,8 @@
         }
       },
       "indexes": {
-        "market_pages_service_idx": {
-          "name": "market_pages_service_idx",
+        "city_pages_service_idx": {
+          "name": "city_pages_service_idx",
           "columns": [
             {
               "expression": "service_id",
@@ -1353,11 +1371,11 @@
           "method": "btree",
           "with": {}
         },
-        "market_pages_market_idx": {
-          "name": "market_pages_market_idx",
+        "city_pages_city_idx": {
+          "name": "city_pages_city_idx",
           "columns": [
             {
-              "expression": "market_id",
+              "expression": "city_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1368,8 +1386,8 @@
           "method": "btree",
           "with": {}
         },
-        "market_pages_updated_at_idx": {
-          "name": "market_pages_updated_at_idx",
+        "city_pages_updated_at_idx": {
+          "name": "city_pages_updated_at_idx",
           "columns": [
             {
               "expression": "updated_at",
@@ -1383,8 +1401,8 @@
           "method": "btree",
           "with": {}
         },
-        "market_pages_created_at_idx": {
-          "name": "market_pages_created_at_idx",
+        "city_pages_created_at_idx": {
+          "name": "city_pages_created_at_idx",
           "columns": [
             {
               "expression": "created_at",
@@ -1400,9 +1418,9 @@
         }
       },
       "foreignKeys": {
-        "market_pages_service_id_services_id_fk": {
-          "name": "market_pages_service_id_services_id_fk",
-          "tableFrom": "market_pages",
+        "city_pages_service_id_services_id_fk": {
+          "name": "city_pages_service_id_services_id_fk",
+          "tableFrom": "city_pages",
           "tableTo": "services",
           "columnsFrom": [
             "service_id"
@@ -1413,12 +1431,12 @@
           "onDelete": "set null",
           "onUpdate": "no action"
         },
-        "market_pages_market_id_markets_id_fk": {
-          "name": "market_pages_market_id_markets_id_fk",
-          "tableFrom": "market_pages",
-          "tableTo": "markets",
+        "city_pages_city_id_cities_id_fk": {
+          "name": "city_pages_city_id_cities_id_fk",
+          "tableFrom": "city_pages",
+          "tableTo": "cities",
           "columnsFrom": [
-            "market_id"
+            "city_id"
           ],
           "columnsTo": [
             "id"
@@ -2390,8 +2408,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "market_pages_id": {
-          "name": "market_pages_id",
+        "city_pages_id": {
+          "name": "city_pages_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
@@ -2542,11 +2560,11 @@
           "method": "btree",
           "with": {}
         },
-        "payload_locked_documents_rels_market_pages_id_idx": {
-          "name": "payload_locked_documents_rels_market_pages_id_idx",
+        "payload_locked_documents_rels_city_pages_id_idx": {
+          "name": "payload_locked_documents_rels_city_pages_id_idx",
           "columns": [
             {
-              "expression": "market_pages_id",
+              "expression": "city_pages_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -2697,12 +2715,12 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "payload_locked_documents_rels_market_pages_fk": {
-          "name": "payload_locked_documents_rels_market_pages_fk",
+        "payload_locked_documents_rels_city_pages_fk": {
+          "name": "payload_locked_documents_rels_city_pages_fk",
           "tableFrom": "payload_locked_documents_rels",
-          "tableTo": "market_pages",
+          "tableTo": "city_pages",
           "columnsFrom": [
-            "market_pages_id"
+            "city_pages_id"
           ],
           "columnsTo": [
             "id"
@@ -3088,8 +3106,8 @@
         "paused"
       ]
     },
-    "public.enum_market_pages_status": {
-      "name": "enum_market_pages_status",
+    "public.enum_city_pages_status": {
+      "name": "enum_city_pages_status",
       "schema": "public",
       "values": [
         "draft",
@@ -3129,6 +3147,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "fb09667c-c4ba-4a83-9923-a52b9b2f0f1b",
+  "id": "b2801ee8-f22a-4e6a-9007-8d2d5dc6eeb0",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }
