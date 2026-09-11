@@ -16,7 +16,8 @@
     "migrate": "cross-env NODE_OPTIONS=--no-deprecation payload migrate",
     "migrate:create": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:create",
     "migrate:status": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:status",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "dev:lite": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=1536\" next dev"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.89.0",
