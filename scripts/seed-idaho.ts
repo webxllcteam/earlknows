@@ -5,13 +5,16 @@ import config from '../src/payload.config'
 const payload = await getPayload({ config })
 
 /**
- * Idaho, carved into seven markets.
+ * Idaho, carved into six markets.
  *
  * Follows the state's six MSAs, with two judgement calls:
  *  - Wood River Valley is split out of the Magic Valley. It's technically part
  *    of it, but it's a resort economy with very different price points.
  *  - North Idaho stands alone rather than folding into Spokane (which is how
  *    Craigslist does it) — a Coeur d'Alene contractor is not a Spokane one.
+ *  - Idaho Falls and Pocatello are ONE market, not two. The census disagrees;
+ *    someone who grew up there does not. Local knowledge beats MSA data for
+ *    drawing these — see CLAUDE.md.
  *
  * Every city is seeded INACTIVE except Boise. A city only goes live when it has
  * real local content; publishing them all would be a doorway network.
@@ -70,26 +73,20 @@ const MARKETS: {
   {
     name: 'Eastern Idaho',
     slug: 'eastern-idaho',
-    notes: 'Idaho Falls MSA plus Rexburg. ~174k people, second-largest market.',
+    notes:
+      'Idaho Falls and Pocatello together, plus Rexburg and Blackfoot. The census splits these into two MSAs; contractors cover the whole corridor. Corrected from local knowledge — MSAs measure commuting for employment, not service radius.',
     cities: [
       { name: 'Idaho Falls', slug: 'idaho-falls', county: 'Bonneville County' },
       { name: 'Ammon', slug: 'ammon', county: 'Bonneville County' },
+      { name: 'Pocatello', slug: 'pocatello', county: 'Bannock County' },
+      { name: 'Chubbuck', slug: 'chubbuck', county: 'Bannock County' },
+      { name: 'Blackfoot', slug: 'blackfoot', county: 'Bingham County' },
       { name: 'Rexburg', slug: 'rexburg', county: 'Madison County' },
       { name: 'Rigby', slug: 'rigby', county: 'Jefferson County' },
       { name: 'Shelley', slug: 'shelley', county: 'Bingham County' },
       { name: 'Sugar City', slug: 'sugar-city', county: 'Madison County' },
-      { name: 'Driggs', slug: 'driggs', county: 'Teton County' },
-    ],
-  },
-  {
-    name: 'Pocatello Region',
-    slug: 'pocatello-region',
-    notes: 'Pocatello MSA plus Blackfoot. Kept separate from Idaho Falls — ~50 miles apart.',
-    cities: [
-      { name: 'Pocatello', slug: 'pocatello', county: 'Bannock County' },
-      { name: 'Chubbuck', slug: 'chubbuck', county: 'Bannock County' },
-      { name: 'Blackfoot', slug: 'blackfoot', county: 'Bingham County' },
       { name: 'American Falls', slug: 'american-falls', county: 'Power County' },
+      { name: 'Driggs', slug: 'driggs', county: 'Teton County' },
     ],
   },
   {

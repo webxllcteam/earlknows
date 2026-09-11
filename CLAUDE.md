@@ -71,6 +71,17 @@ The competitors we're positioned against:
   *Rule:* a city page must say something a neighbouring town's page would not.
   If deleting the city name leaves nothing unique, it's a doorway page.
 
+- **2026-09-11 — Market boundaries come from local knowledge, not census data.**
+  I first drew Idaho's markets from Metropolitan Statistical Areas and split
+  Idaho Falls from Pocatello. Wrong: MSAs measure *commuting for employment*,
+  which is not a contractor's service radius. Someone who grew up in Eastern
+  Idaho corrected it — those are one market. Merged.
+
+  **Process for new states:** don't draw boundaries from data. Draft them from
+  MSAs as a starting point, then let the *first contractor recruited in that
+  state* correct them. Their own service area IS the market definition, and
+  asking is free. Treat any market map as provisional until a local has seen it.
+
 - **2026-09-11 — Over-cap providers go on a waitlist.** They see "not accepting
   new providers here right now" and can leave details. This doubles as a demand
   curve for our own inventory: lots of waitlisted roofers in Boise means the cap
