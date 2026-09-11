@@ -68,6 +68,10 @@ The competitors we're positioned against:
 
   *Rule:* a market page stays `draft` until 2+ cities under it are live —
   otherwise it duplicates its only child.
+  *Market hub behaviour:* `/[market]` derives its trade list from the live city
+  listings beneath it, NOT from which trades have a market page. A trade with no
+  live market page still appears, listed with the towns that carry it; its
+  heading becomes a link only once that market page is published.
   *Schema note:* a Boise contractor shown on a Meridian page keeps their real
   Boise address in `LocalBusiness`, with `areaServed` covering Meridian. Never
   fabricate a local address.

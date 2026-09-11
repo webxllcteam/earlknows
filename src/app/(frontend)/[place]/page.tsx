@@ -42,8 +42,18 @@ export default async function PlacePage({ params }: { params: Promise<Params> })
 
   const payload = await payloadClient()
 
-  // A city shows its own listings. A market shows the trades it has live pages for.
+  const towns = place.kind === 'market' ? await citiesInMarket(place.id) : []
+
+  // A city lists its own trades. A market derives them from the live listings
+  // across its towns — which is a different question from whether that trade
+  // has earned a market page of its own yet.
   const trades: { slug: string; name: string; note: string }[] = []
+  const marketTrades: {
+    slug: string
+    name: string
+    href: string | null
+    towns: { slug: string; label: string }[]
+  }[] = []
 
   if (place.kind === 'city') {
     const listings = await payload.find({
@@ -65,25 +75,48 @@ export default async function PlacePage({ params }: { params: Promise<Params> })
             : `${panel} vetted ${panel === 1 ? 'contractor' : 'contractors'}`,
       })
     }
-  } else {
-    const pages = await payload.find({
-      collection: 'market-pages',
-      where: { and: [{ market: { equals: place.id } }, { status: { equals: 'live' } }] },
-      depth: 1,
-      limit: 200,
-    })
-    for (const p of pages.docs) {
-      const service = p.service as { slug?: string; name?: string }
-      if (!service?.slug) continue
-      trades.push({
+  } else if (towns.length > 0) {
+    const [listings, pages] = await Promise.all([
+      payload.find({
+        collection: 'listings',
+        where: {
+          and: [{ city: { in: towns.map((t) => t.id) } }, { status: { equals: 'live' } }],
+        },
+        depth: 2,
+        limit: 500,
+      }),
+      payload.find({
+        collection: 'market-pages',
+        where: { and: [{ market: { equals: place.id } }, { status: { equals: 'live' } }] },
+        depth: 1,
+        limit: 200,
+      }),
+    ])
+
+    // Which trades have their own market page, so we can link the heading there.
+    const withMarketPage = new Set(
+      pages.docs
+        .map((p) => (p.service as { slug?: string })?.slug)
+        .filter((v): v is string => Boolean(v)),
+    )
+
+    const grouped = new Map<string, (typeof marketTrades)[number]>()
+    for (const l of listings.docs) {
+      const service = l.service as { slug?: string; name?: string }
+      const city = l.city as { slug?: string; name?: string; state?: string; active?: boolean }
+      if (!service?.slug || !city?.slug || city.active === false) continue
+
+      const entry = grouped.get(service.slug) ?? {
         slug: service.slug,
         name: String(service.name),
-        note: 'Across the whole valley',
-      })
+        href: withMarketPage.has(service.slug) ? `/${slug}/${service.slug}` : null,
+        towns: [],
+      }
+      entry.towns.push({ slug: city.slug, label: `${city.name}, ${city.state}` })
+      grouped.set(service.slug, entry)
     }
+    marketTrades.push(...grouped.values())
   }
-
-  const towns = place.kind === 'market' ? await citiesInMarket(place.id) : []
 
   const heading =
     place.kind === 'city'
@@ -119,23 +152,48 @@ export default async function PlacePage({ params }: { params: Promise<Params> })
         </p>
       </section>
 
-      {trades.length > 0 ? (
-        <section>
-          <h2>Trades</h2>
-          <ul className="grid">
-            {trades.map((t) => (
-              <li key={t.slug}>
-                <Link className="card" href={`/${slug}/${t.slug}`}>
-                  <span className="card-title">{t.name}</span>
-                  <span className="card-note">{t.note}</span>
-                </Link>
-              </li>
+      {place.kind === 'city' &&
+        (trades.length > 0 ? (
+          <section>
+            <h2>Trades</h2>
+            <ul className="grid">
+              {trades.map((t) => (
+                <li key={t.slug}>
+                  <Link className="card" href={`/${slug}/${t.slug}`}>
+                    <span className="card-title">{t.name}</span>
+                    <span className="card-note">{t.note}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : (
+          <p>Earl is still lining people up here. Check back shortly.</p>
+        ))}
+
+      {place.kind === 'market' &&
+        (marketTrades.length > 0 ? (
+          <section>
+            <h2>Trades across the {place.name}</h2>
+            {marketTrades.map((t) => (
+              <div className="faq" key={t.slug}>
+                <h3>
+                  {t.href ? <Link href={t.href}>{t.name}</Link> : t.name}
+                </h3>
+                <p className="meta">
+                  {t.towns.map((town, i) => (
+                    <span key={town.slug}>
+                      {i > 0 && ' · '}
+                      <Link href={`/${town.slug}/${t.slug}`}>{town.label}</Link>
+                    </span>
+                  ))}
+                </p>
+              </div>
             ))}
-          </ul>
-        </section>
-      ) : (
-        <p>Earl is still lining people up here. Check back shortly.</p>
-      )}
+          </section>
+        ) : (
+          <p>Earl is still lining people up across the {place.name}. Check back shortly.</p>
+        ))}
 
       {towns.length > 0 && (
         <section>
