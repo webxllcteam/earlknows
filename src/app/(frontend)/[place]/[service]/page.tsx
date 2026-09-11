@@ -7,7 +7,11 @@ import { payloadClient, SITE_NAME, SITE_URL, safeStaticParams } from '@/lib/payl
 import { citiesInMarket, resolvePlace, type Place } from '@/lib/places'
 import { LeadForm } from './LeadForm'
 
-export const revalidate = 3600
+// This page reads searchParams for the lead form's sent/error state, which is
+// incompatible with ISR caching (DYNAMIC_SERVER_USAGE). Rendered per request
+// instead; Cloudflare caches it at the edge.
+// TODO: move form state into useActionState so this can go back to ISR.
+export const dynamic = 'force-dynamic'
 
 type Params = { place: string; service: string }
 type Search = { sent?: string; error?: string }
