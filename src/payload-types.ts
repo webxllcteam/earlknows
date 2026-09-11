@@ -71,7 +71,8 @@ export interface Config {
     markets: Market;
     cities: City;
     providers: Provider;
-    territories: Territory;
+    listings: Listing;
+    'market-pages': MarketPage;
     applications: Application;
     leads: Lead;
     media: Media;
@@ -83,7 +84,7 @@ export interface Config {
   };
   collectionsJoins: {
     providers: {
-      listedIn: 'territories';
+      listedIn: 'listings';
     };
   };
   collectionsSelect: {
@@ -91,7 +92,8 @@ export interface Config {
     markets: MarketsSelect<false> | MarketsSelect<true>;
     cities: CitiesSelect<false> | CitiesSelect<true>;
     providers: ProvidersSelect<false> | ProvidersSelect<true>;
-    territories: TerritoriesSelect<false> | TerritoriesSelect<true>;
+    listings: ListingsSelect<false> | ListingsSelect<true>;
+    'market-pages': MarketPagesSelect<false> | MarketPagesSelect<true>;
     applications: ApplicationsSelect<false> | ApplicationsSelect<true>;
     leads: LeadsSelect<false> | LeadsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
@@ -294,14 +296,14 @@ export interface Provider {
    */
   services?: (number | Service)[] | null;
   /**
-   * Metro areas they cover.
+   * Towns they will work in. This is the unit Earl sells.
    */
-  serviceAreas?: (number | Market)[] | null;
+  serviceAreas?: (number | City)[] | null;
   /**
-   * Where Earl currently lists them. Read-only. If this is empty the contractor appears nowhere on the site — open the matching Territory and add them to its Providers panel.
+   * Where Earl currently lists them. Read-only. If this is empty the contractor appears nowhere on the site — open the matching Listing and add them to its Providers panel.
    */
   listedIn?: {
-    docs?: (number | Territory)[];
+    docs?: (number | Listing)[];
     hasNextPage?: boolean;
     totalDocs?: number;
   };
@@ -337,12 +339,12 @@ export interface Media {
   focalY?: number | null;
 }
 /**
- * One service × one market. This is the unit a contractor buys.
+ * One service × one city. This is what a contractor buys and what a shopper reads.
  *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "territories".
+ * via the `definition` "listings".
  */
-export interface Territory {
+export interface Listing {
   id: number;
   /**
    * Generated automatically.
@@ -350,13 +352,13 @@ export interface Territory {
   label?: string | null;
   status: 'live' | 'paused';
   service: number | Service;
-  market: number | Market;
+  city: number | City;
   /**
-   * THIS is what publishes a contractor on the page. Only active providers who cover this trade and market appear here. Shown in rotating order — never ranked.
+   * THIS is what publishes a contractor on the page. Only active providers who cover this trade in this city appear here. Shown in rotating order — never ranked.
    */
   providers?: (number | Provider)[] | null;
   /**
-   * How many providers we currently accept here. Once the panel is full, applicants are waitlisted.
+   * How many providers we currently accept in this city. Once the panel is full, applicants are waitlisted.
    */
   maxProviders: number;
   /**
@@ -417,6 +419,63 @@ export interface Territory {
   priceHigh?: number | null;
   /**
    * Published as FAQPage schema. Four or five real questions.
+   */
+  faqs?:
+    | {
+        question: string;
+        answer: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Metro-wide pages that aggregate the city listings beneath them.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "market-pages".
+ */
+export interface MarketPage {
+  id: number;
+  /**
+   * Generated automatically.
+   */
+  label?: string | null;
+  /**
+   * Keep as draft until two or more cities in this market are live — otherwise it duplicates its only child.
+   */
+  status: 'draft' | 'live';
+  service: number | Service;
+  market: number | Market;
+  /**
+   * Under ~60 characters.
+   */
+  metaTitle?: string | null;
+  /**
+   * Under ~155 characters.
+   */
+  metaDescription?: string | null;
+  /**
+   * Write about the metro, not one town — coverage across the valley, how to choose between areas, what varies by part of the region.
+   */
+  intro?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Published as FAQPage schema.
    */
   faqs?:
     | {
@@ -557,8 +616,12 @@ export interface PayloadLockedDocument {
         value: number | Provider;
       } | null)
     | ({
-        relationTo: 'territories';
-        value: number | Territory;
+        relationTo: 'listings';
+        value: number | Listing;
+      } | null)
+    | ({
+        relationTo: 'market-pages';
+        value: number | MarketPage;
       } | null)
     | ({
         relationTo: 'applications';
@@ -695,13 +758,13 @@ export interface ProvidersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "territories_select".
+ * via the `definition` "listings_select".
  */
-export interface TerritoriesSelect<T extends boolean = true> {
+export interface ListingsSelect<T extends boolean = true> {
   label?: T;
   status?: T;
   service?: T;
-  market?: T;
+  city?: T;
   providers?: T;
   maxProviders?: T;
   monthlyRate?: T;
@@ -711,6 +774,28 @@ export interface TerritoriesSelect<T extends boolean = true> {
   localNotes?: T;
   priceLow?: T;
   priceHigh?: T;
+  faqs?:
+    | T
+    | {
+        question?: T;
+        answer?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "market-pages_select".
+ */
+export interface MarketPagesSelect<T extends boolean = true> {
+  label?: T;
+  status?: T;
+  service?: T;
+  market?: T;
+  metaTitle?: T;
+  metaDescription?: T;
+  intro?: T;
   faqs?:
     | T
     | {

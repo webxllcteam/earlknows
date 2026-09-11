@@ -46,23 +46,31 @@ The competitors we're positioned against:
   because it caps revenue per market arithmetically, gives every page a
   single point of supply failure, and can't load-balance lead volume.
 
-- **2026-09-11 — Territories are sold per *market*, not per city.** A market is a
-  metro (Treasure Valley); cities belong to it. A roofer sells "the valley", not
-  seven separate towns — so one territory covers the whole metro and every city
-  page in that market renders the same panel.
-  This deliberately separates two things Angi also keeps separate: the
-  **commercial unit** (what a contractor buys — Angi uses ZIP selections) and the
-  **page surface** (city pages, which exist for search). Creating a city page is
-  now an editorial decision, not a commercial one.
-  *Rule:* don't create a city page you can't write ~600 words of genuinely local
-  content for. "If you removed the city name, would anything unique remain?" is
-  the test. Seeded cities other than Boise are `active: false` until they earn a
-  page — inactive cities 404 rather than publishing thin duplicates.
-  *Schema note:* a Boise-based contractor shown on a Meridian page keeps their
-  real Boise address in `LocalBusiness`, with `areaServed` covering Meridian.
-  Never fabricate a local address.
-  *Later:* ZIP-level routing (Angi's approach) once there are enough providers
-  per market to make round-robin across a whole metro too blunt.
+- **2026-09-11 — The geographic model, settled.** Four record types:
+  - **Markets** — a metro (Treasure Valley). Groups cities. *Not billed.*
+  - **Cities** — belong to a market. Boise, Meridian, Nampa, Eagle.
+  - **Listings** — service × **city**. The billable unit: panel, cap, monthly
+    rate, and the words for `/[city]/[service]`.
+  - **Market pages** — service × **market**. Content only; the panel is the union
+    of that market's city listings. Powers `/[market]/[service]`.
+
+  A *place* is a city or a market — both are things people search for, so both
+  get `/[place]/[service]` pages.
+
+  *Evolved through two wrong turns:* first service × city with no metro concept
+  (a valley-wide contractor would need seven assignments), then service × market
+  with no city pages (identical content across towns — the doorway pattern).
+  Billing landed on **city** because that's the unit shoppers type and it avoids
+  a ZIP layer entirely; a metro-covering contractor buys several cities, and the
+  answer to "why am I paying four times?" is a bundle price, not a schema change.
+  Market pages exist because "roofers in the treasure valley" is real search
+  volume a market with no page can't capture.
+
+  *Rule:* a market page stays `draft` until 2+ cities under it are live —
+  otherwise it duplicates its only child.
+  *Schema note:* a Boise contractor shown on a Meridian page keeps their real
+  Boise address in `LocalBusiness`, with `areaServed` covering Meridian. Never
+  fabricate a local address.
 
 - **2026-09-11 — Over-cap providers go on a waitlist.** They see "not accepting
   new providers here right now" and can leave details. This doubles as a demand
@@ -166,6 +174,14 @@ The competitors we're positioned against:
 - **2026-09-11 — Page content lives on the Territory record.** The editorial for
   `/roofing/boise/` *is* the roofing-in-Boise pairing. A separate content
   collection would mean keeping two records in sync forever.
+
+- **2026-09-11 — Migrations are set up. Dev uses push; production uses migrations.**
+  This is Payload's own recommended workflow. Iterate locally with auto-push
+  (`pnpm dev` syncs the schema), then `pnpm migrate:create <name>` before
+  deploying. `pnpm start` runs `payload migrate` before `next start`, so Railway
+  applies pending migrations on every deploy. Baseline is
+  `src/migrations/20260911_062151_initial.ts`.
+  Re-seed a local rebuild with `pnpm seed`.
 
 - **2026-09-11 — Destructive schema changes prompt interactively and will hang a
   backgrounded dev server.** When a column is dropped and another added, Drizzle

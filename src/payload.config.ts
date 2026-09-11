@@ -13,7 +13,8 @@ import { Markets } from './collections/Markets'
 import { Media } from './collections/Media'
 import { Providers } from './collections/Providers'
 import { Services } from './collections/Services'
-import { Territories } from './collections/Territories'
+import { Listings } from './collections/Listings'
+import { MarketPages } from './collections/MarketPages'
 import { Users } from './collections/Users'
 
 const filename = fileURLToPath(import.meta.url)
@@ -25,7 +26,18 @@ export default buildConfig({
     importMap: { baseDir: path.resolve(dirname) },
     meta: { titleSuffix: '— Earl Knows' },
   },
-  collections: [Services, Markets, Cities, Providers, Territories, Applications, Leads, Media, Users],
+  collections: [
+    Services,
+    Markets,
+    Cities,
+    Providers,
+    Listings,
+    MarketPages,
+    Applications,
+    Leads,
+    Media,
+    Users,
+  ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },

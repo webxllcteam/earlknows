@@ -4,27 +4,26 @@ import config from '../src/payload.config'
 
 const payload = await getPayload({ config })
 
-const findBySlug = async (collection: 'services' | 'markets' | 'cities', slug: string) => {
+const bySlug = async (collection: 'services' | 'markets' | 'cities', slug: string) => {
   const r = await payload.find({ collection, where: { slug: { equals: slug } }, limit: 1 })
   return r.docs[0]
 }
 
-// --- admin user (dev only; change the password after logging in) ------------
-const users = await payload.find({ collection: 'users', limit: 1 })
-if (users.totalDocs === 0) {
+// --- admin -----------------------------------------------------------------
+if ((await payload.find({ collection: 'users', limit: 1 })).totalDocs === 0) {
   await payload.create({
     collection: 'users',
     data: {
       email: 'webxllcteam@gmail.com',
-      password: 'ChangeMe!earl2026',
+      password: 'earlknows2026',
       name: 'Mike Hermansen',
     },
   })
-  console.log('created admin: webxllcteam@gmail.com / ChangeMe!earl2026  (change this)')
+  console.log('admin: webxllcteam@gmail.com / earlknows2026')
 }
 
 // --- market ----------------------------------------------------------------
-let market = await findBySlug('markets', 'treasure-valley')
+let market = await bySlug('markets', 'treasure-valley')
 if (!market) {
   market = await payload.create({
     collection: 'markets',
@@ -32,33 +31,38 @@ if (!market) {
       name: 'Treasure Valley',
       slug: 'treasure-valley',
       state: 'ID',
-      notes: 'Ada and Canyon counties. One panel covers the whole valley.',
+      notes: 'Ada and Canyon counties. Groups the towns; not billed.',
       active: true,
     },
   })
-  console.log('created market: Treasure Valley')
+  console.log('market: Treasure Valley')
 }
 
-// --- cities in that market -------------------------------------------------
+// --- cities ----------------------------------------------------------------
 const towns = [
-  { name: 'Boise', slug: 'boise', county: 'Ada County' },
-  { name: 'Meridian', slug: 'meridian', county: 'Ada County' },
-  { name: 'Nampa', slug: 'nampa', county: 'Canyon County' },
-  { name: 'Eagle', slug: 'eagle', county: 'Ada County' },
+  { name: 'Boise', slug: 'boise', county: 'Ada County', active: true },
+  { name: 'Meridian', slug: 'meridian', county: 'Ada County', active: false },
+  { name: 'Nampa', slug: 'nampa', county: 'Canyon County', active: false },
+  { name: 'Eagle', slug: 'eagle', county: 'Ada County', active: false },
 ]
 
+const cityIds: Record<string, number> = {}
 for (const t of towns) {
-  if (!(await findBySlug('cities', t.slug))) {
-    await payload.create({
-      collection: 'cities',
-      data: { ...t, state: 'ID', market: market.id, active: t.slug === 'boise' },
-    })
-    console.log(`created city: ${t.name}${t.slug === 'boise' ? '' : ' (inactive — no content yet)'}`)
+  const existing = await bySlug('cities', t.slug)
+  if (existing) {
+    cityIds[t.slug] = existing.id
+    continue
   }
+  const created = await payload.create({
+    collection: 'cities',
+    data: { ...t, state: 'ID', market: market.id },
+  })
+  cityIds[t.slug] = created.id
+  console.log(`city: ${t.name}${t.active ? '' : ' (inactive)'}`)
 }
 
 // --- service ---------------------------------------------------------------
-let service = await findBySlug('services', 'roofing')
+let service = await bySlug('services', 'roofing')
 if (!service) {
   service = await payload.create({
     collection: 'services',
@@ -70,29 +74,46 @@ if (!service) {
       active: true,
     },
   })
-  console.log('created service: Roofing')
+  console.log('service: Roofing')
 }
 
-// --- territory -------------------------------------------------------------
-const existing = await payload.find({
-  collection: 'territories',
-  where: { and: [{ service: { equals: service.id } }, { market: { equals: market.id } }] },
+// --- listing (billable: service x city) ------------------------------------
+const existingListing = await payload.find({
+  collection: 'listings',
+  where: {
+    and: [{ service: { equals: service.id } }, { city: { equals: cityIds.boise } }],
+  },
   limit: 1,
 })
 
-if (!existing.docs[0]) {
+if (!existingListing.docs[0]) {
   await payload.create({
-    collection: 'territories',
+    collection: 'listings',
     data: {
       service: service.id,
-      market: market.id,
+      city: cityIds.boise,
       status: 'live',
       maxProviders: 3,
       priceLow: 9000,
       priceHigh: 28000,
     },
   })
-  console.log('created territory: Roofing — Treasure Valley, ID (cap 3)')
+  console.log('listing: Roofing — Boise, ID (cap 3)')
+}
+
+// --- market page (draft: only one city live, so it would duplicate) ---------
+const existingMarketPage = await payload.find({
+  collection: 'market-pages',
+  where: { and: [{ service: { equals: service.id } }, { market: { equals: market.id } }] },
+  limit: 1,
+})
+
+if (!existingMarketPage.docs[0]) {
+  await payload.create({
+    collection: 'market-pages',
+    data: { service: service.id, market: market.id, status: 'draft' },
+  })
+  console.log('market page: Roofing — Treasure Valley (draft — needs 2+ live cities)')
 }
 
 console.log('seed complete')

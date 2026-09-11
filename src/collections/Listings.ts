@@ -1,16 +1,18 @@
 import type { CollectionConfig } from 'payload'
 
 /**
- * A Territory is one service in one city — the unit Earl sells.
- * It also carries the editorial content for /[service]/[city]/,
- * because that page IS this pairing.
+ * A Listing is one service in one city — the unit Earl sells, and the page a
+ * shopper lands on. It owns the panel, the price, and its own words.
+ *
+ * Markets group cities for the aggregate /[market]/[service] pages; they are
+ * not billed. See MarketPages.
  */
-export const Territories: CollectionConfig = {
-  slug: 'territories',
+export const Listings: CollectionConfig = {
+  slug: 'listings',
   admin: {
     useAsTitle: 'label',
     defaultColumns: ['label', 'status', 'provider', 'monthlyRate'],
-    description: 'One service × one market. This is the unit a contractor buys.',
+    description: 'One service × one city. This is what a contractor buys and what a shopper reads.',
     group: 'Network',
   },
   hooks: {
@@ -18,14 +20,14 @@ export const Territories: CollectionConfig = {
       async ({ data, req }) => {
         // Keep a readable label so the admin list is scannable.
         const serviceId = typeof data.service === 'object' ? data.service?.id : data.service
-        const marketId = typeof data.market === 'object' ? data.market?.id : data.market
-        if (serviceId && marketId) {
+        const cityId = typeof data.city === 'object' ? data.city?.id : data.city
+        if (serviceId && cityId) {
           try {
-            const [service, market] = await Promise.all([
+            const [service, city] = await Promise.all([
               req.payload.findByID({ collection: 'services', id: serviceId, depth: 0 }),
-              req.payload.findByID({ collection: 'markets', id: marketId, depth: 0 }),
+              req.payload.findByID({ collection: 'cities', id: cityId, depth: 0 }),
             ])
-            data.label = `${service.name} — ${market.name}, ${market.state}`
+            data.label = `${service.name} — ${city.name}, ${city.state}`
           } catch {
             // Leave the existing label alone if either lookup fails.
           }
@@ -62,9 +64,9 @@ export const Territories: CollectionConfig = {
           admin: { width: '50%' },
         },
         {
-          name: 'market',
+          name: 'city',
           type: 'relationship',
-          relationTo: 'markets',
+          relationTo: 'cities',
           required: true,
           admin: { width: '50%' },
         },
@@ -80,17 +82,16 @@ export const Territories: CollectionConfig = {
       filterOptions: ({ data }) => {
         const serviceId =
           typeof data?.service === 'object' ? data?.service?.id : (data?.service as number)
-        const marketId =
-          typeof data?.market === 'object' ? data?.market?.id : (data?.market as number)
+        const cityId = typeof data?.city === 'object' ? data?.city?.id : (data?.city as number)
 
         const and: Record<string, unknown>[] = [{ status: { equals: 'active' } }]
         if (serviceId) and.push({ services: { contains: serviceId } })
-        if (marketId) and.push({ serviceAreas: { contains: marketId } })
+        if (cityId) and.push({ serviceAreas: { contains: cityId } })
         return { and }
       },
       admin: {
         description:
-          'THIS is what publishes a contractor on the page. Only active providers who cover this trade and market appear here. Shown in rotating order — never ranked.',
+          'THIS is what publishes a contractor on the page. Only active providers who cover this trade in this city appear here. Shown in rotating order — never ranked.',
       },
     },
     {
@@ -105,7 +106,7 @@ export const Territories: CollectionConfig = {
           admin: {
             width: '50%',
             description:
-              'How many providers we currently accept here. Once the panel is full, applicants are waitlisted.',
+              'How many providers we currently accept in this city. Once the panel is full, applicants are waitlisted.',
           },
         },
         {

@@ -86,7 +86,7 @@ export const Providers: CollectionConfig = {
       label: 'Coverage',
       admin: {
         description:
-          'What this contractor can do and where they will travel. Filling this in does NOT publish them — it only makes them selectable on matching Territories. Publishing happens on the Territory record.',
+          'What this contractor can do and where they will travel. Filling this in does NOT publish them — it only makes them selectable on matching Territories. Publishing happens on the Listing record.',
       },
       fields: [
         {
@@ -99,19 +99,19 @@ export const Providers: CollectionConfig = {
         {
           name: 'serviceAreas',
           type: 'relationship',
-          relationTo: 'markets',
+          relationTo: 'cities',
           hasMany: true,
-          admin: { description: 'Metro areas they cover.' },
+          admin: { description: 'Towns they will work in. This is the unit Earl sells.' },
         },
         {
           name: 'listedIn',
           type: 'join',
-          collection: 'territories',
+          collection: 'listings',
           on: 'providers',
           admin: {
             allowCreate: false,
             description:
-              'Where Earl currently lists them. Read-only. If this is empty the contractor appears nowhere on the site — open the matching Territory and add them to its Providers panel.',
+              'Where Earl currently lists them. Read-only. If this is empty the contractor appears nowhere on the site — open the matching Listing and add them to its Providers panel.',
           },
         },
       ],

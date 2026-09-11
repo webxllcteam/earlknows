@@ -1,18 +1,22 @@
 {
   "name": "earlknows",
   "version": "0.1.0",
-  "description": "Earl Knows — one vetted pro per service per city",
+  "description": "Earl Knows \u2014 one vetted pro per service per city",
   "license": "UNLICENSED",
   "type": "module",
   "scripts": {
     "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
     "devsafe": "rm -rf .next && cross-env NODE_OPTIONS=--no-deprecation next dev",
     "build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build",
-    "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
+    "start": "cross-env NODE_OPTIONS=--no-deprecation payload migrate && next start",
     "lint": "cross-env NODE_OPTIONS=--no-deprecation eslint .",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
-    "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap"
+    "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
+    "migrate": "cross-env NODE_OPTIONS=--no-deprecation payload migrate",
+    "migrate:create": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:create",
+    "migrate:status": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:status",
+    "seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.89.0",
@@ -44,6 +48,10 @@
     "pnpm": "^9 || ^10 || ^11"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["sharp", "esbuild", "unrs-resolver"]
+    "onlyBuiltDependencies": [
+      "sharp",
+      "esbuild",
+      "unrs-resolver"
+    ]
   }
 }

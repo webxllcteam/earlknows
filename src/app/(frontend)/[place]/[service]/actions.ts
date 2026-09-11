@@ -43,10 +43,10 @@ export async function submitLead(formData: FormData) {
 
   const name = get('name')
   const phone = get('phone')
-  const citySlug = get('citySlug')
+  const placeSlug = get('placeSlug')
   const serviceSlug = get('serviceSlug')
 
-  if (!name || !phone) redirect(`/${citySlug}/${serviceSlug}?error=missing`)
+  if (!name || !phone) redirect(`/${placeSlug}/${serviceSlug}?error=missing`)
 
   const providerIds = get('providerIds')
     .split(',')
@@ -67,10 +67,10 @@ export async function submitLead(formData: FormData) {
       service: Number(get('serviceId')) || undefined,
       city: Number(get('cityId')) || undefined,
       provider: providerId,
-      sourcePage: `/${citySlug}/${serviceSlug}`,
+      sourcePage: `/${placeSlug}/${serviceSlug}`,
       status: 'new',
     },
   })
 
-  redirect(`/${citySlug}/${serviceSlug}?sent=1`)
+  redirect(`/${placeSlug}/${serviceSlug}?sent=1`)
 }

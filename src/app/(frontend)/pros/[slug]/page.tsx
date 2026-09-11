@@ -54,39 +54,25 @@ export default async function ProviderPage({ params }: { params: Promise<Params>
   if (!provider) notFound()
 
   const payload = await payloadClient()
-  const territories = await payload.find({
-    collection: 'territories',
-    where: { providers: { contains: provider.id } },
+  const found = await payload.find({
+    collection: 'listings',
+    where: { and: [{ providers: { contains: provider.id } }, { status: { equals: 'live' } }] },
     depth: 2,
-    limit: 100,
+    limit: 200,
   })
 
-  // Territories are per-market; link to every city page in those markets.
-  const marketIds = territories.docs
-    .map((t) => (typeof t.market === 'object' ? t.market?.id : t.market))
-    .filter((v): v is number => typeof v === 'number')
-
-  const cities = marketIds.length
-    ? await payload.find({
-        collection: 'cities',
-        where: { and: [{ market: { in: marketIds } }, { active: { equals: true } }] },
-        depth: 1,
-        limit: 200,
-      })
-    : { docs: [] as Awaited<ReturnType<typeof payload.find>>['docs'] }
-
-  const listings = territories.docs.flatMap((t) => {
-    const service = t.service as { slug?: string; name?: string }
-    const tMarketId = typeof t.market === 'object' ? t.market?.id : t.market
-    if (!service?.slug) return []
-    return cities.docs
-      .filter((c) => (typeof c.market === 'object' ? c.market?.id : c.market) === tMarketId)
-      .map((c) => ({
-        key: `${t.id}-${c.id}`,
-        href: `/${c.slug}/${service.slug}`,
+  const listings = found.docs.flatMap((l) => {
+    const service = l.service as { slug?: string; name?: string }
+    const city = l.city as { slug?: string; name?: string; state?: string; active?: boolean }
+    if (!service?.slug || !city?.slug || city.active === false) return []
+    return [
+      {
+        key: String(l.id),
+        href: `/${city.slug}/${service.slug}`,
         service: service.name,
-        city: `${c.name}, ${c.state}`,
-      }))
+        city: `${city.name}, ${city.state}`,
+      },
+    ]
   })
 
   const addr = (provider.address ?? {}) as Record<string, string>
