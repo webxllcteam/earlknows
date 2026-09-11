@@ -125,16 +125,25 @@ The competitors we're positioned against:
   iteration never touches production data. The Railway DB stays private — no
   public TCP proxy needed, since the deployed app connects over the private network.
 
-- **2026-09-11 — URL architecture is service-first.**
+- **2026-09-11 — URL architecture is city-first.**
   ```
-  /                      home
-  /[service]/            service hub — accumulates topical authority
-  /[service]/[city]/     the money page
-  /[city]/               city hub
+  /                      home — lists cities
+  /[city]/               city hub — lists trades in that market
+  /[city]/[service]/     the money page
   /pros/[provider]/      provider profile
   ```
-  Root-level `/[slug]/` resolves to either a service or a city, which avoids two
-  sibling dynamic segments.
+  *Reversed from* an earlier service-first plan (`/roofing/boise/`). The original
+  rationale — that `/roofing/` would accumulate topical authority — was weak:
+  URL segment order has almost no direct ranking effect, and authority flows
+  through internal linking, which is independent of path shape. City-first wins
+  on the things that do matter: it matches how a customer thinks (locate first),
+  it matches the unit of expansion (we launch markets, not trades), and the
+  breadcrumb reads as a local directory rather than a national trade site.
+  Nobody searches a trade nationally with intent we can serve.
+
+  National service hubs were dropped — with one city they'd be a page with one
+  link on it. Revisit if we're ever in enough markets for `/services/[slug]/` to
+  be worth having.
 
 - **2026-09-11 — Page content lives on the Territory record.** The editorial for
   `/roofing/boise/` *is* the roofing-in-Boise pairing. A separate content

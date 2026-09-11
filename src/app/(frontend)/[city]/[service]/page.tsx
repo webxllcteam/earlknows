@@ -8,7 +8,7 @@ import { LeadForm } from './LeadForm'
 
 export const revalidate = 3600
 
-type Params = { slug: string; city: string }
+type Params = { city: string; service: string }
 type Search = { sent?: string; error?: string }
 
 type ProviderDoc = {
@@ -42,12 +42,12 @@ export async function generateStaticParams() {
       const service = t.service as { slug?: string }
       const city = t.city as { slug?: string }
       if (!service?.slug || !city?.slug) return null
-      return { slug: service.slug, city: city.slug }
+      return { city: city.slug, service: service.slug }
     })
-    .filter((v): v is { slug: string; city: string } => v !== null)
+    .filter((v): v is { city: string; service: string } => v !== null)
 }
 
-async function getTerritory(serviceSlug: string, citySlug: string) {
+async function getTerritory(citySlug: string, serviceSlug: string) {
   const payload = await payloadClient()
   const [services, cities] = await Promise.all([
     payload.find({ collection: 'services', where: { slug: { equals: serviceSlug } }, limit: 1 }),
@@ -70,8 +70,8 @@ async function getTerritory(serviceSlug: string, citySlug: string) {
 }
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
-  const { slug, city: citySlug } = await params
-  const found = await getTerritory(slug, citySlug)
+  const { city: citySlug, service: serviceSlug } = await params
+  const found = await getTerritory(citySlug, serviceSlug)
   if (!found) return {}
   const { territory, service, city } = found
 
@@ -83,7 +83,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   return {
     title,
     description,
-    alternates: { canonical: `/${slug}/${citySlug}` },
+    alternates: { canonical: `/${citySlug}/${serviceSlug}` },
     openGraph: { title, description, type: 'website' },
   }
 }
@@ -95,14 +95,14 @@ export default async function TerritoryPage({
   params: Promise<Params>
   searchParams: Promise<Search>
 }) {
-  const { slug, city: citySlug } = await params
+  const { city: citySlug, service: serviceSlug } = await params
   const { sent, error } = await searchParams
 
-  const found = await getTerritory(slug, citySlug)
+  const found = await getTerritory(citySlug, serviceSlug)
   if (!found) notFound()
 
   const { territory, service, city } = found
-  const pageUrl = `${SITE_URL}/${slug}/${citySlug}`
+  const pageUrl = `${SITE_URL}/${citySlug}/${serviceSlug}`
 
   const allProviders = (
     Array.isArray(territory.providers) ? territory.providers : []
@@ -116,8 +116,8 @@ export default async function TerritoryPage({
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
-        { '@type': 'ListItem', position: 2, name: service.name, item: `${SITE_URL}/${slug}` },
-        { '@type': 'ListItem', position: 3, name: city.name, item: pageUrl },
+        { '@type': 'ListItem', position: 2, name: city.name, item: `${SITE_URL}/${citySlug}` },
+        { '@type': 'ListItem', position: 3, name: service.name, item: pageUrl },
       ],
     },
     {
@@ -198,7 +198,8 @@ export default async function TerritoryPage({
       />
 
       <nav className="crumbs">
-        <Link href="/">{SITE_NAME}</Link> / <Link href={`/${slug}`}>{service.name}</Link> / {city.name}
+        <Link href="/">{SITE_NAME}</Link> / <Link href={`/${citySlug}`}>{city.name}</Link> /{' '}
+        {service.name}
       </nav>
 
       <section className="hero">
@@ -269,8 +270,8 @@ export default async function TerritoryPage({
         </div>
       ) : (
         <LeadForm
-          servicePath={slug}
-          cityPath={citySlug}
+          citySlug={citySlug}
+          serviceSlug={serviceSlug}
           serviceId={service.id}
           cityId={city.id}
           providerIds={allProviders.map((p) => p.id)}
@@ -295,7 +296,7 @@ export default async function TerritoryPage({
         {panelFull
           ? `Earl's list here is full right now — he caps it deliberately so the contractors on it actually get work. Put your name down and he'll come back to you when a slot opens.`
           : `Earl is taking applications in ${city.name}. He lists a small number on purpose.`}{' '}
-        <Link href={`/apply?service=${slug}&city=${citySlug}`}>
+        <Link href={`/apply?city=${citySlug}&service=${serviceSlug}`}>
           {panelFull ? 'Join the waitlist' : 'Apply to be listed'}
         </Link>
         .

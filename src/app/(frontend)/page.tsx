@@ -6,18 +6,18 @@ export const revalidate = 3600
 export default async function HomePage() {
   const payload = await payloadClient()
 
-  const [services, cities] = await Promise.all([
-    payload.find({
-      collection: 'services',
-      where: { active: { equals: true } },
-      sort: 'sortOrder',
-      limit: 50,
-    }),
+  const [cities, services] = await Promise.all([
     payload.find({
       collection: 'cities',
       where: { active: { equals: true } },
       sort: 'name',
-      limit: 50,
+      limit: 100,
+    }),
+    payload.find({
+      collection: 'services',
+      where: { active: { equals: true } },
+      sort: 'sortOrder',
+      limit: 100,
     }),
   ])
 
@@ -26,32 +26,14 @@ export default async function HomePage() {
       <section className="hero">
         <h1>Earl knows a guy.</h1>
         <p className="lede">
-          One vetted contractor per trade, per city. You get a name — not a form sold to eight
-          companies who all call you at dinner.
+          A short list of vetted contractors in each town — never eight companies who all call you
+          at dinner. Earl caps the list on purpose, so the people on it actually get work.
         </p>
       </section>
 
-      {services.docs.length > 0 && (
-        <section>
-          <h2>Trades</h2>
-          <ul className="grid">
-            {services.docs.map((service) => (
-              <li key={service.id}>
-                <Link className="card" href={`/${service.slug}`}>
-                  <span className="card-title">{service.name}</span>
-                  {service.shortDescription && (
-                    <span className="card-note">{service.shortDescription}</span>
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
       {cities.docs.length > 0 && (
         <section>
-          <h2>Markets</h2>
+          <h2>Where Earl works</h2>
           <ul className="grid">
             {cities.docs.map((city) => (
               <li key={city.id}>
@@ -64,6 +46,15 @@ export default async function HomePage() {
               </li>
             ))}
           </ul>
+        </section>
+      )}
+
+      {services.docs.length > 0 && (
+        <section>
+          <h2>Trades he covers</h2>
+          <p className="meta">
+            {services.docs.map((s) => s.name).join(' · ')}
+          </p>
         </section>
       )}
     </div>

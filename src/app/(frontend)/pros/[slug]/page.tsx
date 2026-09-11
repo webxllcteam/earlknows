@@ -133,7 +133,7 @@ export default async function ProviderPage({ params }: { params: Promise<Params>
               if (!service?.slug || !city?.slug) return null
               return (
                 <li key={t.id}>
-                  <Link className="card" href={`/${service.slug}/${city.slug}`}>
+                  <Link className="card" href={`/${city.slug}/${service.slug}`}>
                     <span className="card-title">{service.name}</span>
                     <span className="card-note">
                       {city.name}, {city.state}

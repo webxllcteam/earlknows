@@ -23,15 +23,15 @@ const button: React.CSSProperties = {
 }
 
 export function LeadForm({
-  servicePath,
-  cityPath,
+  citySlug,
+  serviceSlug,
   serviceId,
   cityId,
   providerIds,
   error,
 }: {
-  servicePath: string
-  cityPath: string
+  citySlug: string
+  serviceSlug: string
   serviceId: number
   cityId: number
   providerIds: number[]
@@ -42,8 +42,8 @@ export function LeadForm({
       {error === 'missing' && (
         <p style={{ color: '#b3261e' }}>Please add your name and a phone number.</p>
       )}
-      <input type="hidden" name="servicePath" value={servicePath} />
-      <input type="hidden" name="cityPath" value={cityPath} />
+      <input type="hidden" name="citySlug" value={citySlug} />
+      <input type="hidden" name="serviceSlug" value={serviceSlug} />
       <input type="hidden" name="serviceId" value={String(serviceId)} />
       <input type="hidden" name="cityId" value={String(cityId)} />
       <input type="hidden" name="providerIds" value={providerIds.join(',')} />
