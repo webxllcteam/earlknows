@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { RichText } from '@payloadcms/richtext-lexical/react'
 
-import { payloadClient, SITE_NAME, SITE_URL } from '@/lib/payload'
+import { payloadClient, SITE_NAME, SITE_URL, safeStaticParams } from '@/lib/payload'
 import { citiesInMarket, resolvePlace, type Place } from '@/lib/places'
 import { LeadForm } from './LeadForm'
 
@@ -42,6 +42,7 @@ const toProviders = (v: unknown): ProviderDoc[] =>
   )
 
 export async function generateStaticParams() {
+  return safeStaticParams(async () => {
   const payload = await payloadClient()
   const [listings, cityPages] = await Promise.all([
     payload.find({
@@ -75,6 +76,7 @@ export async function generateStaticParams() {
     }
   }
   return params
+  })
 }
 
 /** Everything a page needs, whether it's a city listing or a market aggregate. */

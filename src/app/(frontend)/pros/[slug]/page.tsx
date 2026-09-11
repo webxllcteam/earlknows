@@ -3,13 +3,14 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { RichText } from '@payloadcms/richtext-lexical/react'
 
-import { payloadClient, SITE_NAME, SITE_URL } from '@/lib/payload'
+import { payloadClient, SITE_NAME, SITE_URL, safeStaticParams } from '@/lib/payload'
 
 export const revalidate = 3600
 
 type Params = { slug: string }
 
 export async function generateStaticParams() {
+  return safeStaticParams(async () => {
   const payload = await payloadClient()
   const providers = await payload.find({
     collection: 'providers',
@@ -19,6 +20,7 @@ export async function generateStaticParams() {
   return providers.docs
     .filter((p) => typeof p.slug === 'string' && p.slug.length > 0)
     .map((p) => ({ slug: String(p.slug) }))
+  })
 }
 
 async function getProvider(slug: string) {

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
-import { payloadClient, SITE_NAME, SITE_URL } from '@/lib/payload'
+import { payloadClient, SITE_NAME, SITE_URL, safeStaticParams } from '@/lib/payload'
 import { citiesInMarket, resolvePlace } from '@/lib/places'
 
 export const revalidate = 3600
@@ -10,6 +10,7 @@ export const revalidate = 3600
 type Params = { place: string }
 
 export async function generateStaticParams() {
+  return safeStaticParams(async () => {
   const payload = await payloadClient()
   const [cities, markets] = await Promise.all([
     payload.find({ collection: 'cities', where: { active: { equals: true } }, limit: 500 }),
@@ -19,6 +20,7 @@ export async function generateStaticParams() {
     ...cities.docs.map((c) => ({ place: String(c.slug) })),
     ...markets.docs.map((m) => ({ place: String(m.slug) })),
   ]
+  })
 }
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {

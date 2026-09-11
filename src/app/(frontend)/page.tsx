@@ -1,7 +1,10 @@
 import Link from 'next/link'
 import { payloadClient } from '@/lib/payload'
 
-export const revalidate = 3600
+// Rendered per request: the home page queries the database, and Railway's
+// private network doesn't exist at build time. Cloudflare caches it at the edge,
+// so the origin barely sees this route.
+export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
   const payload = await payloadClient()
