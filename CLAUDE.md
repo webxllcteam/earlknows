@@ -96,6 +96,16 @@ The competitors we're positioned against:
   needs something only someone working that market would know — permit rules,
   climate failure modes, real price ranges.
 
+### Product
+
+- **2026-09-11 — A provider's *capability* is separate from where Earl *lists* them.**
+  `providers.services` and `providers.serviceAreas` record what a contractor can
+  do and where they'll travel. `territories.providers` records where Earl actually
+  lists them — a commercial decision constrained by panel caps and what they pay
+  for. A roofer may cover all of Ada County while Earl only lists them in Boise.
+  `providers.listedIn` is a read-only `join` field showing the latter, so there's
+  one source of truth.
+
 ### Technical
 
 - **2026-09-11 — Stack: Next.js 16.3.3 + Payload CMS 3.89 + Postgres.** Payload

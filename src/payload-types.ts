@@ -80,7 +80,11 @@ export interface Config {
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
-  collectionsJoins: {};
+  collectionsJoins: {
+    providers: {
+      listedIn: 'territories';
+    };
+  };
   collectionsSelect: {
     services: ServicesSelect<false> | ServicesSelect<true>;
     cities: CitiesSelect<false> | CitiesSelect<true>;
@@ -258,6 +262,22 @@ export interface Provider {
     [k: string]: unknown;
   } | null;
   photos?: (number | Media)[] | null;
+  /**
+   * Trades they work in.
+   */
+  services?: (number | Service)[] | null;
+  /**
+   * Markets they will travel to.
+   */
+  serviceAreas?: (number | City)[] | null;
+  /**
+   * Where Earl currently lists them. Read-only — add or remove a provider from the Territory record.
+   */
+  listedIn?: {
+    docs?: (number | Territory)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
   /**
    * Internal only — never rendered on the site.
    */
@@ -622,6 +642,9 @@ export interface ProvidersSelect<T extends boolean = true> {
   insuranceExpiry?: T;
   bio?: T;
   photos?: T;
+  services?: T;
+  serviceAreas?: T;
+  listedIn?: T;
   vettingNotes?: T;
   updatedAt?: T;
   createdAt?: T;

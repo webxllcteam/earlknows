@@ -82,6 +82,41 @@ export const Providers: CollectionConfig = {
     },
     { name: 'photos', type: 'upload', relationTo: 'media', hasMany: true },
     {
+      type: 'collapsible',
+      label: 'Coverage',
+      admin: {
+        description:
+          'What this contractor can do and where. Separate from where Earl actually lists them — that is a commercial decision, set on the Territory.',
+      },
+      fields: [
+        {
+          name: 'services',
+          type: 'relationship',
+          relationTo: 'services',
+          hasMany: true,
+          admin: { description: 'Trades they work in.' },
+        },
+        {
+          name: 'serviceAreas',
+          type: 'relationship',
+          relationTo: 'cities',
+          hasMany: true,
+          admin: { description: 'Markets they will travel to.' },
+        },
+        {
+          name: 'listedIn',
+          type: 'join',
+          collection: 'territories',
+          on: 'providers',
+          admin: {
+            allowCreate: false,
+            description:
+              'Where Earl currently lists them. Read-only — add or remove a provider from the Territory record.',
+          },
+        },
+      ],
+    },
+    {
       name: 'vettingNotes',
       type: 'textarea',
       admin: {
